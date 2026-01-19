@@ -1,10 +1,12 @@
 /***************************************************************
    Motor driver definitions for L298N with ESP32
-   Adapted for ROSArduinoBridge
+   Matched to NEW User Wiring:
+   Left Motor  -> OUT1/OUT2 (IN1:4, IN2:5)
+   Right Motor -> OUT3/OUT4 (IN3:6, IN4:7)
  ***************************************************************/
 
 #ifdef L298_MOTOR_DRIVER
-  // Define pins based on user configuration
+  // Định nghĩa chân dựa trên đấu nối mới của bạn
   #define LEFT_MOTOR_IN1  4
   #define LEFT_MOTOR_IN2  5
   #define RIGHT_MOTOR_IN3 6
@@ -15,17 +17,22 @@
     pinMode(LEFT_MOTOR_IN2, OUTPUT);
     pinMode(RIGHT_MOTOR_IN3, OUTPUT);
     pinMode(RIGHT_MOTOR_IN4, OUTPUT);
+    
+    digitalWrite(LEFT_MOTOR_IN1, LOW);
+    digitalWrite(LEFT_MOTOR_IN2, LOW);
+    digitalWrite(RIGHT_MOTOR_IN3, LOW);
+    digitalWrite(RIGHT_MOTOR_IN4, LOW);
   }
 
   void setMotorSpeed(int i, int spd) {
     int pin1, pin2;
     
     if (i == LEFT) {
-        pin1 = LEFT_MOTOR_IN1;
-        pin2 = LEFT_MOTOR_IN2;
+        pin1 = LEFT_MOTOR_IN1; // Chân 4
+        pin2 = LEFT_MOTOR_IN2; // Chân 5
     } else {
-        pin1 = RIGHT_MOTOR_IN3;
-        pin2 = RIGHT_MOTOR_IN4;
+        pin1 = RIGHT_MOTOR_IN3; // Chân 6
+        pin2 = RIGHT_MOTOR_IN4; // Chân 7
     }
 
     if (spd == 0) {

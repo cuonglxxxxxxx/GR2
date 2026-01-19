@@ -1,39 +1,30 @@
-/***************************************************************
-   Encoder driver definitions for ESP32
-   Using interrupts (attachInterrupt)
- ***************************************************************/
+/* ******************************************************************** */
+/* Encoder driver function definitions - COPIED FROM WORKING TEST CODE  */
+/* ******************************************************************** */
 
 #ifdef ARDUINO_ENC_COUNTER
   
-  // Left Encoder Pins (User provided)
-  #define LEFT_ENC_A_PIN  1 
-  #define LEFT_ENC_B_PIN  2
+  // Cấu hình chân y hệt file test_esp32.ino
+  // Lưu ý: Đảo 18, 17 để sửa chiều quay như bạn muốn
+  #define LEFT_ENC_A_PIN  18 
+  #define LEFT_ENC_B_PIN  17
   
-  // Right Encoder Pins (DEFAULT - PLEASE UPDATE IF DIFFERENT)
-  #define RIGHT_ENC_A_PIN 41
-  #define RIGHT_ENC_B_PIN 42
+  #define RIGHT_ENC_A_PIN 8
+  #define RIGHT_ENC_B_PIN 3
   
   volatile long left_enc_pos = 0;
   volatile long right_enc_pos = 0;
 
-  // Interrupt Service Routines (IRAM_ATTR is required for ESP32 ISRs)
-  void IRAM_ATTR doLeftEncA() {
+  // Logic ngắt y hệt file test
+  void IRAM_ATTR doLeftEnc() {
     if (digitalRead(LEFT_ENC_B_PIN) == digitalRead(LEFT_ENC_A_PIN)) {
       left_enc_pos++;
     } else {
       left_enc_pos--;
     }
   }
-  
-  void IRAM_ATTR doLeftEncB() {
-    if (digitalRead(LEFT_ENC_A_PIN) == digitalRead(LEFT_ENC_B_PIN)) {
-        left_enc_pos++;
-    } else {
-        left_enc_pos--;
-    }
-  }
 
-  void IRAM_ATTR doRightEncA() {
+  void IRAM_ATTR doRightEnc() {
     if (digitalRead(RIGHT_ENC_B_PIN) == digitalRead(RIGHT_ENC_A_PIN)) {
       right_enc_pos++;
     } else {
@@ -41,26 +32,16 @@
     }
   }
 
-  void IRAM_ATTR doRightEncB() {
-    if (digitalRead(RIGHT_ENC_A_PIN) == digitalRead(RIGHT_ENC_B_PIN)) {
-        right_enc_pos++;
-    } else {
-        right_enc_pos--;
-    }
-  }
-
-  // Initialization function
+  // Khởi tạo Encoder
   void initEncoders() {
       pinMode(LEFT_ENC_A_PIN, INPUT_PULLUP);
       pinMode(LEFT_ENC_B_PIN, INPUT_PULLUP);
       pinMode(RIGHT_ENC_A_PIN, INPUT_PULLUP);
       pinMode(RIGHT_ENC_B_PIN, INPUT_PULLUP);
 
-      attachInterrupt(digitalPinToInterrupt(LEFT_ENC_A_PIN), doLeftEncA, CHANGE);
-      attachInterrupt(digitalPinToInterrupt(LEFT_ENC_B_PIN), doLeftEncB, CHANGE);
-      
-      attachInterrupt(digitalPinToInterrupt(RIGHT_ENC_A_PIN), doRightEncA, CHANGE);
-      attachInterrupt(digitalPinToInterrupt(RIGHT_ENC_B_PIN), doRightEncB, CHANGE);
+      // Gắn ngắt CHANGE y hệt file test
+      attachInterrupt(digitalPinToInterrupt(LEFT_ENC_A_PIN), doLeftEnc, CHANGE);
+      attachInterrupt(digitalPinToInterrupt(RIGHT_ENC_A_PIN), doRightEnc, CHANGE);
   }
   
   long readEncoder(int i) {

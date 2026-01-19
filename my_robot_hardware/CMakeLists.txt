@@ -13,7 +13,12 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(dynamixel_sdk REQUIRED)
 
+# Use PkgConfig to find libserial
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBSERIAL REQUIRED libserial)
+
 include_directories(include)
+include_directories(${LIBSERIAL_INCLUDE_DIRS})
 
 add_library(
   ${PROJECT_NAME}
@@ -21,7 +26,15 @@ add_library(
   src/mobile_base_hardware_interface.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_lifecycle hardware_interface pluginlib dynamixel_sdk)
+target_link_libraries(${PROJECT_NAME} ${LIBSERIAL_LIBRARIES})
+
+ament_target_dependencies(${PROJECT_NAME} 
+  rclcpp 
+  rclcpp_lifecycle 
+  hardware_interface 
+  pluginlib 
+  dynamixel_sdk
+)
 
 pluginlib_export_plugin_description_file(hardware_interface my_robot_hardware_interface.xml)
 
