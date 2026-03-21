@@ -24,6 +24,7 @@ add_library(
   ${PROJECT_NAME}
   SHARED
   src/mobile_base_hardware_interface.cpp
+  src/wheel.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${LIBSERIAL_LIBRARIES})

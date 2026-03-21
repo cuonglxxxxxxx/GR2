@@ -8,7 +8,13 @@
             <plugin>mobile_base_hardware/MobileBaseHardwareInterface</plugin>
             <param name="left_motor_id">10</param>
             <param name="right_motor_id">20</param>
-            <param name="dynamixel_port">/dev/ttyACM0</param>
+            <param name="port">/dev/ttyACM0</param>
+            <param name="baud_rate">57600</param>
+            <param name="update_rate">30</param>
+            <param name="timeout">1000</param>
+            <param name="loop_rate">30</param>
+            <param name="enc_counts_per_revolution">1339</param>
+
         </hardware>
         <joint name="base_right_wheel_joint">
             <command_interface name="velocity" />

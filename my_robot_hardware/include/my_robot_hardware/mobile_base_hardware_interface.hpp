@@ -6,19 +6,18 @@
 #include <libserial/SerialPort.h>
 #include <vector>
 #include <string>
+#include "my_robot_hardware/wheel.h"
 
 namespace mobile_base_hardware {
-
-struct Wheel {
-    std::string name = "";
-    double position = 0.0;
-    double velocity = 0.0;
-    double command = 0.0;
-};
 
 class MobileBaseHardwareInterface : public hardware_interface::SystemInterface
 {
 public:
+    MobileBaseHardwareInterface() 
+        : logger_(rclcpp::get_logger("MobileBaseHardwareInterface")),
+          loop_rate_(30.0) 
+    {}
+    
     hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
     
     hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
@@ -39,10 +38,14 @@ private:
     LibSerial::SerialPort serial_port_;
     std::string port_name_;
     int baud_rate_;
+    int enc_counts_per_revolution_;
+    float loop_rate_;
 
     Wheel left_wheel_;
     Wheel right_wheel_;
+    std::chrono::time_point<std::chrono::system_clock> time_;
 
+    rclcpp::Logger logger_;
 }; // class MobileBaseHardwareInterface
 
 } // namespace mobile_base_hardware

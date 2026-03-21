@@ -21,7 +21,6 @@
 #endif
 
 #include "commands.h"
-#include "sensors.h"
 
 #ifdef USE_BASE
   #include "motor_driver.h"
@@ -75,20 +74,14 @@ int runCommand() {
     break;
   case ANALOG_WRITE:
     analogWrite(arg1, arg2);
-    // Serial.println("OK"); // REMOVED TO REDUCE NOISE
     break;
   case DIGITAL_WRITE:
     if (arg2 == 0) digitalWrite(arg1, LOW);
     else if (arg2 == 1) digitalWrite(arg1, HIGH);
-    // Serial.println("OK"); // REMOVED TO REDUCE NOISE
     break;
   case PIN_MODE:
     if (arg2 == 0) pinMode(arg1, INPUT);
     else if (arg2 == 1) pinMode(arg1, OUTPUT);
-    // Serial.println("OK"); // REMOVED TO REDUCE NOISE
-    break;
-  case PING:
-    Serial.println(Ping(arg1));
     break;
     
 #ifdef USE_BASE
@@ -112,14 +105,12 @@ int runCommand() {
     else moving = 1;
     leftPID.TargetTicksPerFrame = arg1;
     rightPID.TargetTicksPerFrame = arg2;
-    // Serial.println("OK"); // REMOVED
     break;
   case MOTOR_RAW_PWM:
     lastMotorCommand = millis();
     resetPID();
     moving = 0; 
     setMotorSpeeds(arg1, arg2);
-    // Serial.println("OK"); // REMOVED - CRITICAL FIX
     break;
   case UPDATE_PID:
     while ((str = strtok_r(p, ":", &p)) != NULL) {
@@ -130,7 +121,7 @@ int runCommand() {
     Kd = pid_args[1];
     Ki = pid_args[2];
     Ko = pid_args[3];
-    Serial.println("OK"); // Keep this one as it's rare
+    Serial.println("OK");
     break;
 #endif
   default:

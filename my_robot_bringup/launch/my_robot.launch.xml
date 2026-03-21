@@ -11,6 +11,8 @@
 
     <node pkg="controller_manager" exec="ros2_control_node">
         <param from="$(find-pkg-share my_robot_bringup)/config/my_robot_controllers.yaml" />
+        <param name="robot_description"
+               value="$(command 'xacro $(var urdf_path)')" />
     </node>
 
     <node pkg="controller_manager" exec="spawner" args="joint_state_broadcaster" />

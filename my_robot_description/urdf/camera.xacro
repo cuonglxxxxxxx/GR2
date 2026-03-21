@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <joint name="camera_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="camera_link"/>
+        <origin xyz="0.3 0 0.2" rpy="0 0 0"/> 
+    </joint>
+
+    <link name="camera_link">
+        <visual>
+            <geometry>
+                <box size="0.06 0.28 0.04"/>
+            </geometry>
+            <material name="black">
+                <color rgba="0 0 0 1"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="camera_optical_joint" type="fixed">
+        <parent link="camera_link"/>
+        <child link="camera_link_optical"/>
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+    <link name="camera_link_optical"></link>
+
+    <!-- Map frames của driver kinect_ros2 vào cây TF của robot -->
+    <joint name="kinect_depth_joint" type="fixed">
+        <parent link="camera_link_optical"/>
+        <child link="kinect_depth"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+    <link name="kinect_depth"/>
+
+    <joint name="kinect_rgb_joint" type="fixed">
+        <parent link="camera_link_optical"/>
+        <child link="kinect_rgb"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+    <link name="kinect_rgb"/>
+
+</robot>

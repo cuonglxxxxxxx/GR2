@@ -7,6 +7,8 @@
 #include <cmath>
 #include <thread>
 #include <chrono>
+#include <algorithm>
+#include "my_robot_hardware/wheel.h"
 
 namespace mobile_base_hardware
 {
@@ -14,79 +16,89 @@ namespace mobile_base_hardware
 hardware_interface::CallbackReturn MobileBaseHardwareInterface::on_init(
     const hardware_interface::HardwareInfo & info)
 {
+    RCLCPP_INFO(logger_, "Starting on_init...");
     if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS)
     {
         return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (info_.hardware_parameters.count("dynamixel_port")) {
-        port_name_ = info_.hardware_parameters.at("dynamixel_port"); 
-    } else {
-        port_name_ = "/dev/ttyACM0";
+    time_ = std::chrono::system_clock::now();
+
+    try {
+        port_name_ = info.hardware_parameters.at("port");
+        baud_rate_ = std::stoi(info.hardware_parameters.at("baud_rate"));
+        enc_counts_per_revolution_ = std::stoi(info.hardware_parameters.at("enc_counts_per_revolution"));
+        // loop_rate_ is not used anymore, but we still parse it if present
+        if (info.hardware_parameters.count("loop_rate") > 0) {
+            loop_rate_ = std::stof(info.hardware_parameters.at("loop_rate"));
+        }
+    } catch (const std::exception & e) {
+        RCLCPP_ERROR(logger_, "Error parsing hardware parameters: %s", e.what());
+        return hardware_interface::CallbackReturn::ERROR;
     }
     
-    baud_rate_ = 57600;
+    if (info.joints.size() < 2) {
+        RCLCPP_ERROR(logger_, "Expected 2 joints, but got %zu", info.joints.size());
+        return hardware_interface::CallbackReturn::ERROR;
+    }
 
-    left_wheel_.name = info_.joints[0].name;
-    right_wheel_.name = info_.joints[1].name;
+    right_wheel_.setup(info.joints[0].name, enc_counts_per_revolution_);
+    left_wheel_.setup(info.joints[1].name, enc_counts_per_revolution_);
 
-    left_wheel_.position = 0.0;
-    left_wheel_.velocity = 0.0;
-    left_wheel_.command = 0.0;
-
-    right_wheel_.position = 0.0;
-    right_wheel_.velocity = 0.0;
-    right_wheel_.command = 0.0;
-
+    RCLCPP_INFO(logger_, "on_init successful");
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::StateInterface> MobileBaseHardwareInterface::export_state_interfaces()
 {
+    RCLCPP_INFO(logger_, "Exporting state interfaces...");
     std::vector<hardware_interface::StateInterface> state_interfaces;
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        left_wheel_.name, hardware_interface::HW_IF_POSITION, &left_wheel_.position));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        left_wheel_.name, hardware_interface::HW_IF_VELOCITY, &left_wheel_.velocity));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        right_wheel_.name, hardware_interface::HW_IF_POSITION, &right_wheel_.position));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        right_wheel_.name, hardware_interface::HW_IF_VELOCITY, &right_wheel_.velocity));
-
+    state_interfaces.emplace_back(hardware_interface::StateInterface(left_wheel_.name, hardware_interface::HW_IF_POSITION, &left_wheel_.pos));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(left_wheel_.name, hardware_interface::HW_IF_VELOCITY, &left_wheel_.vel));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(right_wheel_.name, hardware_interface::HW_IF_POSITION, &right_wheel_.pos));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(right_wheel_.name, hardware_interface::HW_IF_VELOCITY, &right_wheel_.vel));
     return state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface> MobileBaseHardwareInterface::export_command_interfaces()
 {
+    RCLCPP_INFO(logger_, "Exporting command interfaces...");
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        left_wheel_.name, hardware_interface::HW_IF_VELOCITY, &left_wheel_.command));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        right_wheel_.name, hardware_interface::HW_IF_VELOCITY, &right_wheel_.command));
-
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(left_wheel_.name, hardware_interface::HW_IF_VELOCITY, &left_wheel_.cmd));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(right_wheel_.name, hardware_interface::HW_IF_VELOCITY, &right_wheel_.cmd));
     return command_interfaces;
 }
 
 hardware_interface::CallbackReturn MobileBaseHardwareInterface::on_configure(
     const rclcpp_lifecycle::State & /*previous_state*/)
 {
-    RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), "Configuring Serial Port: %s", port_name_.c_str());
+    RCLCPP_INFO(logger_, "Configuring Serial Port: %s at %d baud", port_name_.c_str(), baud_rate_);
+
+    if (serial_port_.IsOpen()) {
+        serial_port_.Close();
+    }
 
     try {
         serial_port_.Open(port_name_);
-        serial_port_.SetBaudRate(LibSerial::BaudRate::BAUD_57600);
+        
+        LibSerial::BaudRate baud;
+        switch (baud_rate_) {
+            case 9600: baud = LibSerial::BaudRate::BAUD_9600; break;
+            case 57600: baud = LibSerial::BaudRate::BAUD_57600; break;
+            case 115200: baud = LibSerial::BaudRate::BAUD_115200; break;
+            default: baud = LibSerial::BaudRate::BAUD_57600; break;
+        }
+
+        serial_port_.SetBaudRate(baud);
         serial_port_.SetCharacterSize(LibSerial::CharacterSize::CHAR_SIZE_8);
         serial_port_.SetStopBits(LibSerial::StopBits::STOP_BITS_1);
         serial_port_.SetParity(LibSerial::Parity::PARITY_NONE);
         serial_port_.SetFlowControl(LibSerial::FlowControl::FLOW_CONTROL_NONE);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    } catch (const LibSerial::OpenFailed &) {
-        RCLCPP_ERROR(rclcpp::get_logger("MobileBaseHardwareInterface"), "Failed to open serial port: %s. Check permissions!", port_name_.c_str());
+        RCLCPP_INFO(logger_, "Serial port configured. Waiting for ESP32...");
+        std::this_thread::sleep_for(std::chrono::milliseconds(500)); 
+    } catch (const std::exception & e) {
+        RCLCPP_ERROR(logger_, "Failed to open serial port: %s. Error: %s", port_name_.c_str(), e.what());
         return hardware_interface::CallbackReturn::ERROR;
     }
 
@@ -94,61 +106,95 @@ hardware_interface::CallbackReturn MobileBaseHardwareInterface::on_configure(
 }
 
 hardware_interface::CallbackReturn MobileBaseHardwareInterface::on_activate(
-    const rclcpp_lifecycle::State & /*previous_state*/)
-{
-    RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), "Activating...");
-    
-    for (const auto & joint : info_.joints) {
-        RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), "JOINT NAME: %s", joint.name.c_str());
-        for (const auto & interface : joint.command_interfaces) {
-            RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), "  COMMAND INTERFACE: %s", interface.name.c_str());
-        }
-        for (const auto & interface : joint.state_interfaces) {
-            RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), "  STATE INTERFACE: %s", interface.name.c_str());
-        }
-    }
+    const rclcpp_lifecycle::State & previous_state)
 
+{
+    (void)previous_state;
+    RCLCPP_INFO(logger_, "Activating...");
+    
+    // Reset time_ here to ensure deltaSeconds in first read() is correct
+    time_ = std::chrono::system_clock::now();
+
+    serial_port_.Write("\r");
+    std::stringstream ss;
+    float k_p = 30.0;
+    float k_d = 20.0;
+    float k_i = 0.0;
+    float k_o = 100.0;
+    ss << "u " << k_p << ":" << k_d << ":" << k_i << ":" << k_o << "\r";
+    serial_port_.Write(ss.str());
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn MobileBaseHardwareInterface::on_deactivate(
-    const rclcpp_lifecycle::State & /*previous_state*/)
+    const rclcpp_lifecycle::State & previous_state)
 {
-    RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), "Deactivating...");
-    if (serial_port_.IsOpen()) {
-        serial_port_.Write("o 0 0\r");
-        serial_port_.Close();
-    }
+    (void)previous_state;
+
+    RCLCPP_INFO(logger_, "Deactivating...");
+
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::return_type MobileBaseHardwareInterface::read(
-    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
+    auto new_time = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = new_time - time_;
+    double deltaSeconds = diff.count();
+    
     if (!serial_port_.IsOpen()) return hardware_interface::return_type::ERROR;
 
-    serial_port_.Write("e\r");
-
-    std::string response;
     try {
-        serial_port_.ReadLine(response, '\n', 20); 
+        std::string response;
+        serial_port_.Write("e\r");
         
-        // --- DEBUG: IN RA CHUỖI THÔ NHẬN ĐƯỢC ---
-        RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), "ESP32 SAYS: '%s'", response.c_str());
-        // ----------------------------------------
+        try {
+            serial_port_.ReadLine(response, 10);
+        } catch (const LibSerial::ReadTimeout &) {
+            return hardware_interface::return_type::OK;
+        }
 
-    } catch (...) {
-        return hardware_interface::return_type::OK;
+        if (response.empty()) return hardware_interface::return_type::OK;
+
+        // Xóa ký tự xuống dòng
+        response.erase(std::remove(response.begin(), response.end(), '\r'), response.end());
+        response.erase(std::remove(response.begin(), response.end(), '\n'), response.end());
+
+        std::string delimiter = " ";
+        size_t del_pos = response.find(delimiter);
+        if (del_pos != std::string::npos && del_pos > 0 && del_pos < response.length() - 1) {
+            std::string token_1 = response.substr(0, del_pos);
+            std::string token_2 = response.substr(del_pos + delimiter.length());
+
+            if (!token_1.empty() && !token_2.empty()) {
+                try {
+                    left_wheel_.enc = std::stoi(token_1);
+                    right_wheel_.enc = std::stoi(token_2);
+                } catch (...) {
+                    // RCLCPP_WARN(logger_, "Failed to parse encoder values from: %s", response.c_str());
+                }
+            }
+        }
+
+    } catch (const std::exception & e) {
+        RCLCPP_ERROR(logger_, "Error during read serial: %s", e.what());
+        return hardware_interface::return_type::ERROR;
     }
+      
+    // Cập nhật thời gian sau khi đọc xong để deltaSeconds chính xác cho lần tới
+    time_ = new_time;
 
-    std::stringstream ss(response);
-    long left_enc_val, right_enc_val;
+    double pos_prev_l = left_wheel_.pos;
+    left_wheel_.pos = left_wheel_.calcEncAngle();
     
-    if (ss >> left_enc_val >> right_enc_val) {
-        double ticks_per_rev = 2464.0; 
-        
-        left_wheel_.position = (left_enc_val / ticks_per_rev) * 2.0 * M_PI;
-        right_wheel_.position = (right_enc_val / ticks_per_rev) * 2.0 * M_PI;
+    double pos_prev_r = right_wheel_.pos;
+    right_wheel_.pos = right_wheel_.calcEncAngle();
+
+    // Chỉ tính vận tốc nếu thời gian trôi qua đủ lớn (> 1ms)
+    if (deltaSeconds > 0.001) {
+        left_wheel_.vel = (left_wheel_.pos - pos_prev_l) / deltaSeconds;
+        right_wheel_.vel = (right_wheel_.pos - pos_prev_r) / deltaSeconds;
     }
 
     return hardware_interface::return_type::OK;
@@ -159,23 +205,22 @@ hardware_interface::return_type MobileBaseHardwareInterface::write(
 {
     if (!serial_port_.IsOpen()) return hardware_interface::return_type::ERROR;
 
-    RCLCPP_INFO(rclcpp::get_logger("MobileBaseHardwareInterface"), 
-        "L_CMD: %lf, R_CMD: %lf, L_POS: %lf, R_POS: %lf",
-        left_wheel_.command, right_wheel_.command, left_wheel_.position, right_wheel_.position);
-
-    double max_speed_rad = 18.43; 
-    
-    int left_pwm = (int)((left_wheel_.command / max_speed_rad) * 255.0);
-    int right_pwm = (int)((right_wheel_.command / max_speed_rad) * 255.0);
-
-    if (left_pwm > 255) left_pwm = 255;
-    if (left_pwm < -255) left_pwm = -255;
-    if (right_pwm > 255) right_pwm = 255;
-    if (right_pwm < -255) right_pwm = -255;
-
-    std::stringstream cmd_ss;
-    cmd_ss << "o " << left_pwm << " " << right_pwm << "\r";
-    serial_port_.Write(cmd_ss.str());
+    try {
+        std::stringstream ss;
+        int val_1, val_2;
+        
+        // Tránh chia cho 0 hoặc giá trị quá nhỏ của loop_rate_
+        float rate = (loop_rate_ > 0) ? loop_rate_ : 30.0;
+        
+        val_1 = static_cast<int>(left_wheel_.cmd / left_wheel_.rads_per_count / rate);
+        val_2 = static_cast<int>(right_wheel_.cmd / right_wheel_.rads_per_count / rate);
+        
+        ss << "m " << val_1 << " " << val_2 << "\r";
+        serial_port_.Write(ss.str());
+    } catch (const std::exception & e) {
+        RCLCPP_ERROR(logger_, "Error during write: %s", e.what());
+        return hardware_interface::return_type::ERROR;
+    }
 
     return hardware_interface::return_type::OK;
 }

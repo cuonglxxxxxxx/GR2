@@ -6,11 +6,10 @@
  ***************************************************************/
 
 #ifdef L298_MOTOR_DRIVER
-  // Định nghĩa chân dựa trên đấu nối mới của bạn
   #define LEFT_MOTOR_IN1  4
   #define LEFT_MOTOR_IN2  5
-  #define RIGHT_MOTOR_IN3 6
-  #define RIGHT_MOTOR_IN4 7
+  #define RIGHT_MOTOR_IN3 17
+  #define RIGHT_MOTOR_IN4 18
 
   void initMotorController() {
     pinMode(LEFT_MOTOR_IN1, OUTPUT);
@@ -28,11 +27,11 @@
     int pin1, pin2;
     
     if (i == LEFT) {
-        pin1 = LEFT_MOTOR_IN1; // Chân 4
-        pin2 = LEFT_MOTOR_IN2; // Chân 5
+        pin1 = LEFT_MOTOR_IN1;
+        pin2 = LEFT_MOTOR_IN2;
     } else {
-        pin1 = RIGHT_MOTOR_IN3; // Chân 6
-        pin2 = RIGHT_MOTOR_IN4; // Chân 7
+        pin1 = RIGHT_MOTOR_IN3;
+        pin2 = RIGHT_MOTOR_IN4;
     }
 
     if (spd == 0) {
