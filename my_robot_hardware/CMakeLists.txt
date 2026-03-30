@@ -11,7 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(dynamixel_sdk REQUIRED)
+##find_package(dynamixel_sdk REQUIRED)
 
 # Use PkgConfig to find libserial
 find_package(PkgConfig REQUIRED)
@@ -34,7 +34,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_lifecycle 
   hardware_interface 
   pluginlib 
-  dynamixel_sdk
+  ##dynamixel_sdk
 )
 
 pluginlib_export_plugin_description_file(hardware_interface my_robot_hardware_interface.xml)

@@ -6,10 +6,10 @@
  ***************************************************************/
 
 #ifdef L298_MOTOR_DRIVER
-  #define LEFT_MOTOR_IN1  4
-  #define LEFT_MOTOR_IN2  5
-  #define RIGHT_MOTOR_IN3 17
-  #define RIGHT_MOTOR_IN4 18
+  #define LEFT_MOTOR_IN1  6
+  #define LEFT_MOTOR_IN2  7
+  #define RIGHT_MOTOR_IN3 15
+  #define RIGHT_MOTOR_IN4 16
 
   void initMotorController() {
     pinMode(LEFT_MOTOR_IN1, OUTPUT);
