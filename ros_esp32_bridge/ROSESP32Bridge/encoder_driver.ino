@@ -1,14 +1,10 @@
 /* ******************************************************************** */
-/* Encoder driver for ESP32-S3 N16R8 - FINAL STABLE PINS               */
+/* Encoder driver for ESP32-S3 - FINAL STABLE PINS                      */
 /* ******************************************************************** */
+
+#include "encoder_driver.h"
+
 #ifdef ARDUINO_ENC_COUNTER
-
-  // CHÂN AN TOÀN TUYỆT ĐỐI (Dựa trên danh sách I/O usable của bạn)
-  #define LEFT_ENC_A_PIN  4 
-  #define LEFT_ENC_B_PIN  5
-
-  #define RIGHT_ENC_A_PIN 1
-  #define RIGHT_ENC_B_PIN 2
 
   volatile long left_enc_pos = 0;
   volatile long right_enc_pos = 0;

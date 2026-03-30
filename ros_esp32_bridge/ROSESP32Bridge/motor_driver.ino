@@ -1,16 +1,13 @@
 /***************************************************************
    Motor driver definitions for L298N with ESP32
    Matched to NEW User Wiring:
-   Left Motor  -> OUT1/OUT2 (IN1:4, IN2:5)
-   Right Motor -> OUT3/OUT4 (IN3:6, IN4:7)
+   Left Motor  -> OUT1/OUT2 (IN1:6, IN2:7)
+   Right Motor -> OUT3/OUT4 (IN3:15, IN4:16)
  ***************************************************************/
 
-#ifdef L298_MOTOR_DRIVER
-  #define LEFT_MOTOR_IN1  6
-  #define LEFT_MOTOR_IN2  7
-  #define RIGHT_MOTOR_IN3 15
-  #define RIGHT_MOTOR_IN4 16
+#include "motor_driver.h"
 
+#ifdef L298_MOTOR_DRIVER
   void initMotorController() {
     pinMode(LEFT_MOTOR_IN1, OUTPUT);
     pinMode(LEFT_MOTOR_IN2, OUTPUT);
