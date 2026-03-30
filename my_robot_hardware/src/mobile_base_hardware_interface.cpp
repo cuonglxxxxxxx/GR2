@@ -138,6 +138,7 @@ hardware_interface::return_type MobileBaseHardwareInterface::read(
     serial_port_.Write("e\r");
     
     serial_port_.ReadLine(response, 10);
+    RCLCPP_INFO(logger_, "Read raw: %s", response.c_str());
 
     std::string delimiter = " ";
     size_t del_pos = response.find(delimiter);
@@ -170,7 +171,9 @@ hardware_interface::return_type MobileBaseHardwareInterface::write(
         val_2 = right_wheel_.cmd/right_wheel_.rads_per_count/loop_rate_;
         
         ss << "m " << val_1 << " " << val_2 << "\r";
-        serial_port_.Write(ss.str());
+        std::string cmd = ss.str();
+        RCLCPP_INFO(logger_, "Write: %s", cmd.substr(0, cmd.length()-1).c_str());
+        serial_port_.Write(cmd);
 
     return hardware_interface::return_type::OK;
 }
