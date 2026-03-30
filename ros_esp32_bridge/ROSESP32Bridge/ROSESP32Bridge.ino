@@ -39,8 +39,8 @@ int arg = 0;
 int arg_idx = 0;
 char chr;
 char cmd;
-char argv1[16];
-char argv2[16];
+char argv1[48];
+char argv2[48];
 long arg1;
 long arg2;
 
@@ -58,7 +58,7 @@ int runCommand() {
   int i = 0;
   char *p = argv1;
   char *str;
-  int pid_args[4];
+  float pid_args[4];
   arg1 = atoi(argv1);
   arg2 = atoi(argv2);
   
@@ -114,7 +114,7 @@ int runCommand() {
     break;
   case UPDATE_PID:
     while ((str = strtok_r(p, ":", &p)) != NULL) {
-       pid_args[i] = atoi(str);
+       pid_args[i] = atof(str);
        i++;
     }
     Kp = pid_args[0];
