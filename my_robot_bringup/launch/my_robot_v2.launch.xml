@@ -1,31 +1,42 @@
 <launch>
-    <!-- 1. KHAI BÁO CÁC ĐƯỜNG DẪN CẤU HÌNH -->
+    <!--KHAI BÁO CÁC ĐƯỜNG DẪN CẤU HÌNH -->
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
     <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
     
-    <!-- 2. ROBOT STATE PUBLISHER -->
+    <!--ROBOT STATE PUBLISHER -->
     <node pkg="robot_state_publisher" exec="robot_state_publisher">
         <param name="robot_description" value="$(command 'xacro $(var urdf_path)')" />
     </node>
 
-    <!-- 4. CMD_VEL NORMALIZER -->
+    <!--CMD_VEL NORMALIZER -->
     <node pkg="normalized_cmd" exec="normalized_cmd" name="cmd_vel_normalizer" output="screen">
-        <env name="ROS_DOMAIN_ID" value="30" />
     </node>
 
-    <!-- 5. ODOM TO TF -->
+    <!--ODOM TO TF -->
     <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf_broadcaster" output="screen">
-        <env name="ROS_DOMAIN_ID" value="30" />
     </node>
 
-    <!-- 6. JOINT STATE PUBLISHER -->
+    <!--JOINT STATE PUBLISHER -->
     <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
-        <env name="ROS_DOMAIN_ID" value="30" />
         <param name="source_list" value="['/joint_states']" />
     </node>
 
-    <!-- 7. RVIZ2 -->
+    <!--KINECT-->
+    <include file="$(find-pkg-share kinect_ros2)/launch/pointcloud.launch.py" />
+
+    <!--SLAM TOOL BOX-->   
+    <include file="$(find-pkg-share slam_toolbox)/launch/online_async_launch.py">
+        <arg name="params_file" value="$(find-pkg-share my_robot_bringup)/config/mapper_params_online_async.yaml" />
+    </include>
+
+    <!--POINT CLOUD TO LASERSCAN-->   
+    <node pkg="pointcloud_to_laserscan" exec="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node">
+        <remap from="cloud_in" to="/kinect/points" />
+        <remap from="scan" to="/scan" />
+        <param name="target_frame" value="base_link" />
+    </node>
+
+    <!--RVIZ2 -->
     <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var rviz_config_path)">
-        <env name="ROS_DOMAIN_ID" value="30" />
     </node>
 </launch>

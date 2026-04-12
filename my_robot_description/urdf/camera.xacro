@@ -12,8 +12,8 @@
             <geometry>
                 <box size="0.06 0.28 0.04"/>
             </geometry>
-            <material name="black">
-                <color rgba="0 0 0 1"/>
+            <material name="red">
+                <color rgba="1 0 0 1"/>
             </material>
         </visual>
     </link>
