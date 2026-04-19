@@ -35,6 +35,7 @@
         <remap from="cloud_in" to="/kinect/points" />
         <remap from="scan" to="/scan" />
         <param name="target_frame" value="base_link" />
+        <param name="transform_tolerance" value="0.5" />
     </node>
 
     <!--RVIZ2 -->
