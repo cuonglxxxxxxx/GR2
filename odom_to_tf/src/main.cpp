@@ -1,5 +1,6 @@
 #include <memory>
 #include <chrono>
+#include <cmath>
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -26,10 +27,10 @@ public:
     );
 
     timer_ = this->create_wall_timer(
-      10ms, std::bind(&OdomToTfNode::publishTf, this)
+      20ms, std::bind(&OdomToTfNode::publishTf, this) // 50Hz
     );
 
-    RCLCPP_INFO(get_logger(), "OdomToTfNode: Direct base_link mode.");
+    RCLCPP_INFO(get_logger(), "OdomToTfNode: Stabilized 50Hz mode with tolerance.");
   }
 
 private:
@@ -37,18 +38,13 @@ private:
   {
     if (!has_data_) return;
 
-    // Freshness check: If odom data is older than 2.0s, stop publishing to avoid "jumping"
     auto now = this->get_clock()->now();
-    auto diff = now - last_odom_msg_->header.stamp;
-    if (diff.seconds() > 2.0) {
-        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Odom data too old (%.2f s), skipping TF", diff.seconds());
-        return;
-    }
-
     geometry_msgs::msg::TransformStamped t;
 
-    // Use current PC time for TF to keep RViz happy.
-    t.header.stamp = now;
+    // Add a small tolerance (0.05s) to the timestamp. 
+    // This tells RViz the transform is valid for a short window,
+    // preventing the robot from turning white if the next packet is delayed.
+    t.header.stamp = now + rclcpp::Duration::from_seconds(0.05);
     
     t.header.frame_id = "odom";
     t.child_frame_id = "base_footprint";
@@ -56,7 +52,14 @@ private:
     t.transform.translation.x = last_odom_msg_->pose.pose.position.x;
     t.transform.translation.y = last_odom_msg_->pose.pose.position.y;
     t.transform.translation.z = 0.0;
+
     t.transform.rotation = last_odom_msg_->pose.pose.orientation;
+    
+    // Ensure orientation is valid to prevent jumping to infinity
+    if (std::abs(t.transform.rotation.w) < 0.001 && std::abs(t.transform.rotation.x) < 0.001 && 
+        std::abs(t.transform.rotation.y) < 0.001 && std::abs(t.transform.rotation.z) < 0.001) {
+        t.transform.rotation.w = 1.0;
+    }
 
     tf_broadcaster_->sendTransform(t);
   }
