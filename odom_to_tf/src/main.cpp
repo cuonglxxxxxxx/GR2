@@ -1,94 +1,73 @@
-/**
- * @file odom_to_tf_node.cpp
- * @brief Converts odometry messages into TF2 transforms for frame broadcasting
- *
- * This node subscribes to the /odom topic for nav_msgs::msg::Odometry messages,
- * extracts the robot's pose, and publishes it on the /tf topic as a TransformStamped.
- * Ensures that odom_frame and base_frame are available in TF2 for other nodes.
- */
-
 #include <memory>
+#include <chrono>
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 
-/**
- * @class OdomToTfNode
- * @brief ROS2 node that broadcasts transforms from odometry
- *
- * Listens to Odometry messages and re-publishes the pose as a TF2 transform.
- */
+using namespace std::chrono_literals;
+
 class OdomToTfNode : public rclcpp::Node
 {
 public:
-  /**
-   * @brief Construct a new OdomToTfNode
-   *
-   * Initializes the TransformBroadcaster and subscription to /odom.
-   */
   OdomToTfNode()
   : Node("odom_to_tf_node")
   {
-    // Create TF2 broadcaster for dynamic transforms
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
-    // Subscribe to the odometry topic
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
       "/odom",
       rclcpp::QoS(10),
-      std::bind(&OdomToTfNode::odomCallback, this, std::placeholders::_1)
+      [this](const nav_msgs::msg::Odometry::SharedPtr msg) {
+        this->last_odom_msg_ = msg;
+        this->has_data_ = true;
+      }
     );
 
-    RCLCPP_INFO(get_logger(), "OdomToTfNode initialized, listening to /odom");
+    timer_ = this->create_wall_timer(
+      10ms, std::bind(&OdomToTfNode::publishTf, this)
+    );
+
+    RCLCPP_INFO(get_logger(), "OdomToTfNode: Direct base_link mode.");
   }
 
 private:
-  /**
-   * @brief Callback for incoming Odometry messages
-   *
-   * Extracts the pose and stamps it into a TransformStamped message,
-   * then broadcasts it via TF2 using PC time.
-   *
-   * @param msg Shared pointer to the received Odometry message
-   */
-  void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
+  void publishTf()
   {
+    if (!has_data_) return;
+
+    // Freshness check: If odom data is older than 0.5s, stop publishing to avoid "jumping"
+    auto now = this->get_clock()->now();
+    auto diff = now - last_odom_msg_->header.stamp;
+    if (diff.seconds() > 0.5) {
+        return;
+    }
+
     geometry_msgs::msg::TransformStamped t;
 
-    // Use local clock time instead of microcontroller's timestamp
-    t.header.stamp = this->get_clock()->now();
+    // Always use current PC time for TF to keep RViz happy, 
+    // but use the position data from the latest odom message.
+    t.header.stamp = now + rclcpp::Duration::from_seconds(0.2);
+    
     t.header.frame_id = "odom";
     t.child_frame_id = "base_footprint";
 
-    // Copy translation from odometry pose
-    t.transform.translation.x = msg->pose.pose.position.x;
-    t.transform.translation.y = msg->pose.pose.position.y;
-    t.transform.translation.z = msg->pose.pose.position.z;
+    t.transform.translation.x = last_odom_msg_->pose.pose.position.x;
+    t.transform.translation.y = last_odom_msg_->pose.pose.position.y;
+    t.transform.translation.z = 0.0;
+    t.transform.rotation = last_odom_msg_->pose.pose.orientation;
 
-    // Copy rotation from odometry pose
-    t.transform.rotation = msg->pose.pose.orientation;
-
-    // Broadcast the transform
     tf_broadcaster_->sendTransform(t);
-
-    RCLCPP_DEBUG(this->get_logger(), "Broadcasted transform %s -> %s at time %u.%u",
-      t.header.frame_id.c_str(), t.child_frame_id.c_str(),
-      t.header.stamp.sec, t.header.stamp.nanosec);
   }
 
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;  ///< Subscription to /odom topic
-  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;      ///< TF2 transform broadcaster
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  nav_msgs::msg::Odometry::SharedPtr last_odom_msg_;
+  bool has_data_ = false;
 };
 
-/**
- * @brief Main function: initialize ROS2 and spin the OdomToTfNode
- *
- * @param argc Argument count
- * @param argv Argument values
- * @return int Exit code
- */
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
@@ -97,4 +76,3 @@ int main(int argc, char * argv[])
   rclcpp::shutdown();
   return 0;
 }
-
