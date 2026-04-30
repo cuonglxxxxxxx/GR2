@@ -15,8 +15,6 @@ public:
       1s,  // Periodo: 1 secondo
       std::bind(&TimeSyncPublisher::publish_time, this)
     );
-
-    RCLCPP_INFO(this->get_logger(), "Time sync publisher started. Publishing every 1 second.");
   }
 
 private:
@@ -29,7 +27,6 @@ private:
 
     publisher_->publish(msg);
 
-    RCLCPP_INFO(this->get_logger(), "Published time: %d.%09u", msg.sec, msg.nanosec);
   }
 
   rclcpp::Publisher<builtin_interfaces::msg::Time>::SharedPtr publisher_;

@@ -37,18 +37,18 @@ private:
   {
     if (!has_data_) return;
 
-    // Freshness check: If odom data is older than 0.5s, stop publishing to avoid "jumping"
+    // Freshness check: If odom data is older than 2.0s, stop publishing to avoid "jumping"
     auto now = this->get_clock()->now();
     auto diff = now - last_odom_msg_->header.stamp;
-    if (diff.seconds() > 0.5) {
+    if (diff.seconds() > 2.0) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Odom data too old (%.2f s), skipping TF", diff.seconds());
         return;
     }
 
     geometry_msgs::msg::TransformStamped t;
 
-    // Always use current PC time for TF to keep RViz happy, 
-    // but use the position data from the latest odom message.
-    t.header.stamp = now + rclcpp::Duration::from_seconds(0.2);
+    // Use current PC time for TF to keep RViz happy.
+    t.header.stamp = now;
     
     t.header.frame_id = "odom";
     t.child_frame_id = "base_footprint";
