@@ -12,7 +12,7 @@ slam_toolbox:
     # ROS Parameters
     odom_frame: odom
     map_frame: map
-    base_frame: base_link
+    base_frame: base_footprint
     scan_topic: /scan
     use_map_saver: true
     mode: mapping 
@@ -26,7 +26,7 @@ slam_toolbox:
     max_laser_range: 6.0
     
     minimum_time_interval: 0.05
-    transform_timeout: 2.0
+    transform_timeout: 0.5
     tf_buffer_duration: 30.0
     stack_size_to_use: 40000000 
     enable_interactive_mode: true
