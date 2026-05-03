@@ -8,23 +8,24 @@
     <node pkg="robot_state_publisher" exec="robot_state_publisher">
         <param name="robot_description" value="$(command 'xacro $(var urdf_path)')" />
         <param name="publish_frequency" value="50.0" />
+        <param name="use_sim_time" value="false" />
     </node>
 
     <!--CMD_VEL NORMALIZER -->
     <node pkg="normalized_cmd" exec="normalized_cmd" name="cmd_vel_normalizer" output="screen">
+        <param name="use_sim_time" value="false" />
     </node>
 
-    <!--ODOM TO TF -->
-    <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf_broadcaster" output="screen">
-    </node>
-
-    <!--SYNC TIME-->
-    <node pkg="time_sync" exec="time_sync" name="time_sync_publisher" output="screen">
+    <!--ODOM TO TF BRIDGE (Leonardo Logic) -->
+    <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
+        <param name="use_sim_time" value="false" />
     </node>
 
     <!--JOINT STATE PUBLISHER -->
     <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
         <param name="source_list" value="['/joint_states']" />
+        <param name="rate" value="50" />
+        <param name="use_sim_time" value="false" />
     </node>
 
     <!--KINECT-->
@@ -40,8 +41,8 @@
     <node pkg="pointcloud_to_laserscan" exec="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node">
         <remap from="cloud_in" to="/kinect/points" />
         <remap from="scan" to="/scan" />
-        <param name="target_frame" value="base_link" />
-        <param name="transform_tolerance" value="0.1" />
+        <param name="target_frame" value="base_footprint" />
+        <param name="transform_tolerance" value="0.5" />
         <param name="queue_size" value="50" />
         <param name="min_height" value="-1.0" />
         <param name="max_height" value="3.0" />
