@@ -1,61 +1,59 @@
 <launch>
-    <!--KHAI BÁO CÁC ĐƯỜNG DẪN CẤU HÌNH -->
+    <arg name="mode" default="desktop" />
     <arg name="rviz" default="true" />
+    <arg name="slam" default="true" />
+    
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
     <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
-    
-    <!--ROBOT STATE PUBLISHER -->
-    <node pkg="robot_state_publisher" exec="robot_state_publisher">
-        <param name="robot_description" value="$(command 'xacro $(var urdf_path)')" />
-        <param name="publish_frequency" value="50.0" />
-        <param name="use_sim_time" value="false" />
-    </node>
 
-    <!--CMD_VEL NORMALIZER -->
-    <node pkg="normalized_cmd" exec="normalized_cmd" name="cmd_vel_normalizer" output="screen">
-        <param name="use_sim_time" value="false" />
-    </node>
+    <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
+        <include file="$(find-pkg-share slam_toolbox)/launch/online_async_launch.py" if="$(var slam)">
+            <arg name="slam_params_file" value="$(find-pkg-share my_robot_bringup)/config/mapper_params_online_async.yaml" />
+            <arg name="use_sim_time" value="false" />
+        </include>
 
-    <!--ODOM TO TF BRIDGE (Leonardo Logic) -->
-    <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
-        <param name="use_sim_time" value="false" />
-    </node>
+        <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var rviz_config_path)" if="$(var rviz)">
+        </node>
+    </group>
 
-    <!--JOINT STATE PUBLISHER -->
-    <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
-        <param name="source_list" value="['/joint_states']" />
-        <param name="rate" value="50" />
-        <param name="use_sim_time" value="false" />
-    </node>
+    <group if="$(eval '\'$(var mode)\' == \'raspberry\'')">
+        <node pkg="robot_state_publisher" exec="robot_state_publisher">
+            <param name="robot_description" value="$(command 'xacro $(var urdf_path)')" />
+            <param name="publish_frequency" value="50.0" />
+            <param name="use_sim_time" value="false" />
+        </node>
 
-    <!--KINECT-->
-    <include file="$(find-pkg-share kinect_ros2)/launch/pointcloud.launch.py" />
+        <node pkg="normalized_cmd" exec="normalized_cmd" name="cmd_vel_normalizer" output="screen">
+            <param name="use_sim_time" value="false" />
+        </node>
 
-    <!--SLAM TOOL BOX-->   
-    <include file="$(find-pkg-share slam_toolbox)/launch/online_async_launch.py">
-        <arg name="slam_params_file" value="$(find-pkg-share my_robot_bringup)/config/mapper_params_online_async.yaml" />
-        <arg name="use_sim_time" value="false" />
-    </include>
+        <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
+            <param name="use_sim_time" value="false" />
+        </node>
 
-    <!--POINT CLOUD TO LASERSCAN-->   
-    <node pkg="pointcloud_to_laserscan" exec="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node">
-        <remap from="cloud_in" to="/kinect/points" />
-        <remap from="scan" to="/scan" />
-        <param name="target_frame" value="base_footprint" />
-        <param name="transform_tolerance" value="0.5" />
-        <param name="queue_size" value="50" />
-        <param name="min_height" value="-1.0" />
-        <param name="max_height" value="3.0" />
-        <param name="angle_min" value="-1.5708" />
-        <param name="angle_max" value="1.5708" />
-        <param name="angle_increment" value="0.0174532925" /> <!-- Chính xác 1 độ mỗi tia -->
-        <param name="scan_time" value="0.1" />
-        <param name="range_min" value="0.45" />
-        <param name="range_max" value="6.0" />
-        <param name="use_inf" value="true" />
-    </node>
+        <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
+            <param name="source_list" value="['/joint_states']" />
+            <param name="rate" value="50" />
+            <param name="use_sim_time" value="false" />
+        </node>
 
-    <!--RVIZ2 -->
-    <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var rviz_config_path)" if="$(var rviz)">
-    </node>
+        <include file="$(find-pkg-share kinect_ros2)/launch/pointcloud.launch.py" />
+
+        <node pkg="pointcloud_to_laserscan" exec="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node">
+            <remap from="cloud_in" to="/kinect/points" />
+            <remap from="scan" to="/scan" />
+            <param name="target_frame" value="base_footprint" />
+            <param name="transform_tolerance" value="0.5" />
+            <param name="queue_size" value="50" />
+            <param name="min_height" value="-1.0" />
+            <param name="max_height" value="3.0" />
+            <param name="angle_min" value="-1.5708" />
+            <param name="angle_max" value="1.5708" />
+            <param name="angle_increment" value="0.0174532925" />
+            <param name="scan_time" value="0.1" />
+            <param name="range_min" value="0.45" />
+            <param name="range_max" value="6.0" />
+            <param name="use_inf" value="true" />
+        </node>
+    </group>
 </launch>
