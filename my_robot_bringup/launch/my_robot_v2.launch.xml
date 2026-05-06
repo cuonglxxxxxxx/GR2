@@ -45,15 +45,17 @@
             <param name="target_frame" value="base_footprint" />
             <param name="transform_tolerance" value="0.5" />
             <param name="queue_size" value="50" />
-            <param name="min_height" value="-1.0" />
-            <param name="max_height" value="3.0" />
+            <param name="min_height" value="0.1" />
+            <param name="max_height" value="0.4" />
             <param name="angle_min" value="-1.5708" />
             <param name="angle_max" value="1.5708" />
-            <param name="angle_increment" value="0.0174532925" />
+            <param name="angle_increment" value="0.0349" />
             <param name="scan_time" value="0.1" />
             <param name="range_min" value="0.45" />
             <param name="range_max" value="6.0" />
             <param name="use_inf" value="true" />
+            <!-- QoS Overrides for better WiFi performance and SLAM compatibility -->
+            <param name="qos_overrides./scan.publisher.reliability" value="best_effort" />
         </node>
     </group>
 </launch>
