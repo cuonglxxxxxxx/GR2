@@ -4,7 +4,7 @@
 // #define WHEEL_SEPARATION 0.2f
 // #define V_MAX 0.216f
 // #define W_MAX 2.136f
-#define WHEEL_SEPARATION 0.25f
+#define WHEEL_SEPARATION 0.235f
 #define V_MAX 0.627f
 #define W_MAX 5.016f
 
