@@ -43,6 +43,8 @@
             <remap from="cloud_in" to="/kinect/points" />
             <remap from="scan" to="/scan" />
             <param name="target_frame" value="base_footprint" />
+            <param name="min_range" value="0.5" />
+            <param name="max_range" value="5.0" />
             <!-- QoS Overrides for better WiFi performance and SLAM compatibility -->
             <param name="qos_overrides./scan.publisher.reliability" value="best_effort" />
         </node>
