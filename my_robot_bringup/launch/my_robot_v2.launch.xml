@@ -43,8 +43,16 @@
             <remap from="cloud_in" to="/kinect/points" />
             <remap from="scan" to="/scan" />
             <param name="target_frame" value="base_footprint" />
+            <!-- Range filter: vùng tin cậy Kinect v1 -->
             <param name="min_range" value="0.5" />
-            <param name="max_range" value="5.0" />
+            <param name="max_range" value="4.5" />
+            <!-- Height filter: chỉ lấy điểm ở độ cao 0.1–0.6m so với sàn -->
+            <!-- Loại bỏ: sàn, trần, mặt bàn, thân robot -->
+            <!-- Giữ lại: chân tường, chân đồ vật — đặc trưng ổn định cho SLAM -->
+            <param name="min_height" value="0.1" />
+            <param name="max_height" value="0.6" />
+            <!-- Scan time: Kinect chụp ở 30fps -->
+            <param name="scan_time" value="0.033" />
             <!-- QoS Overrides for better WiFi performance and SLAM compatibility -->
             <param name="qos_overrides./scan.publisher.reliability" value="best_effort" />
         </node>
