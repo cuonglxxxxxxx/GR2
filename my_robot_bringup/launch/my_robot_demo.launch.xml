@@ -1,0 +1,19 @@
+<launch>
+    <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
+
+    <node pkg="robot_state_publisher" exec="robot_state_publisher">
+        <param name="robot_description" value="$(command 'xacro $(var urdf_path)')" />
+        <param name="publish_frequency" value="50.0" />
+        <param name="use_sim_time" value="false" />
+    </node>
+
+    <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
+        <param name="source_list" value="['/joint_states']" />
+        <param name="rate" value="50" />
+        <param name="use_sim_time" value="false" />
+    </node>
+
+    <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
+        <param name="use_sim_time" value="false" />
+    </node>
+</launch>
