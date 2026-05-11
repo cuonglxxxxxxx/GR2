@@ -13,6 +13,10 @@
         <param name="use_sim_time" value="false" />
     </node>
 
+    <node pkg="normalized_cmd" exec="normalized_cmd" name="cmd_vel_normalizer" output="screen">
+        <param name="use_sim_time" value="false" />
+    </node>
+
     <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
         <param name="use_sim_time" value="false" />
     </node>
