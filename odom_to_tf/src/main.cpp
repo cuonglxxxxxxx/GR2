@@ -48,7 +48,7 @@ private:
 
     // 1. Phát TF odom -> base_footprint (Sử dụng thời gian PC + 50ms buffer)
     geometry_msgs::msg::TransformStamped t;
-    t.header.stamp = now + rclcpp::Duration(0, 50000000);
+    t.header.stamp = now;
     t.header.frame_id = "odom";
     t.child_frame_id = "base_footprint";
     t.transform.translation.x = last_odom_msg_->pose.pose.position.x;
