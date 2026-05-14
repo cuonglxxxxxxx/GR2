@@ -40,9 +40,7 @@
         <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen" />
 
         <node pkg="depth_image_proc" exec="point_cloud_xyz_node" name="point_cloud_xyz" namespace="kinect" output="screen">
-            <remap from="image_rect" to="/kinect/depth/image_raw" />
-            <remap from="camera_info" to="/kinect/depth/camera_info" />
-            <remap from="points" to="/kinect/points" />
+            <remap from="depth/image_rect" to="/kinect/depth/image_raw" />
         </node>
 
         <node pkg="pointcloud_to_laserscan" exec="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node">
