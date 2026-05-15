@@ -41,5 +41,13 @@
     </joint>
     <link name="kinect_rgb"/>
 
+    <!-- Frame cho depthimage_to_laserscan: parent camera_link (x=tiến) thay vì optical frame
+         để slam_toolbox nhận scan đúng hướng, không bị lệch 90 độ -->
+    <joint name="camera_depth_frame_joint" type="fixed">
+        <parent link="camera_link"/>
+        <child link="camera_depth_frame"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+    <link name="camera_depth_frame"/>
 
 </robot>
