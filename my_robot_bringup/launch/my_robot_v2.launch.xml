@@ -48,5 +48,10 @@
             <param name="output_frame_id" value="camera_link" />
         </node>
 
+        <!-- camera_depth_frame: parent kinect_link (frame thực tế trong Pi URDF, x=tiến)
+             Kết nối camera_depth_frame vào TF tree chính để slam_toolbox xử lý được scan -->
+        <node pkg="tf2_ros" exec="static_transform_publisher" name="camera_depth_frame_tf"
+            args="--x 0 --y 0 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id kinect_link --child-frame-id camera_depth_frame" />
+
     </group>
 </launch>
