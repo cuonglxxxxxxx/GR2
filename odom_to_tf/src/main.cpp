@@ -42,19 +42,23 @@ public:
 private:
   void publishTf()
   {
-    if (!has_data_) return;
-
     auto now = this->get_clock()->now();
 
-    // 1. Phát TF odom -> base_footprint (Sử dụng thời gian PC + 50ms buffer)
+    // 1. Phát TF odom -> base_footprint
+    // Luôn publish ngay từ đầu (kể cả trước khi có /odom) để tránh gap TF
+    // làm slam_toolbox message filter queue bị đầy khi startup
     geometry_msgs::msg::TransformStamped t;
     t.header.stamp = now;
     t.header.frame_id = "odom";
     t.child_frame_id = "base_footprint";
-    t.transform.translation.x = last_odom_msg_->pose.pose.position.x;
-    t.transform.translation.y = last_odom_msg_->pose.pose.position.y;
-    t.transform.translation.z = 0.0;
-    t.transform.rotation = last_odom_msg_->pose.pose.orientation;
+    if (has_data_) {
+      t.transform.translation.x = last_odom_msg_->pose.pose.position.x;
+      t.transform.translation.y = last_odom_msg_->pose.pose.position.y;
+      t.transform.translation.z = 0.0;
+      t.transform.rotation = last_odom_msg_->pose.pose.orientation;
+    } else {
+      t.transform.rotation.w = 1.0;  // identity — chờ /odom đầu tiên
+    }
     tf_broadcaster_->sendTransform(t);
 
     // 2. Re-stamp IMU để RViz hiển thị mượt mà
