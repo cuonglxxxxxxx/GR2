@@ -39,27 +39,13 @@
 
         <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen" />
 
-        <node pkg="depth_image_proc" exec="point_cloud_xyz_node" name="point_cloud_xyz" namespace="kinect" output="screen">
-            <remap from="/kinect/image_rect" to="/kinect/depth/image_raw" />
-            <remap from="/kinect/camera_info" to="/kinect/depth/camera_info" />
-        </node>
-
-        <node pkg="pointcloud_to_laserscan" exec="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node">
-            <remap from="cloud_in" to="/kinect/points" />
-            <remap from="scan" to="/scan" />
-            <param name="target_frame" value="base_footprint" />
-            <!-- Range filter: vùng tin cậy Kinect v1 -->
-            <param name="min_range" value="0.5" />
-            <param name="max_range" value="4.5" />
-            <!-- Height filter: chỉ lấy điểm ở độ cao 0.1–0.6m so với sàn -->
-            <!-- Loại bỏ: sàn, trần, mặt bàn, thân robot -->
-            <!-- Giữ lại: chân tường, chân đồ vật — đặc trưng ổn định cho SLAM -->
-            <param name="min_height" value="0.1" />
-            <param name="max_height" value="0.6" />
-            <!-- Scan time: Kinect chụp ở 30fps -->
-            <param name="scan_time" value="0.033" />
-            <!-- QoS Overrides for better WiFi performance and SLAM compatibility -->
-            <param name="qos_overrides./scan.publisher.reliability" value="best_effort" />
+        <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
+            <remap from="depth" to="/kinect/depth/image_raw" />
+            <remap from="depth_camera_info" to="/kinect/depth/camera_info" />
+            <param name="range_min" value="0.5" />
+            <param name="range_max" value="4.5" />
+            <param name="scan_height" value="1" />
+            <param name="output_frame_id" value="kinect_depth" />
         </node>
     </group>
 </launch>
