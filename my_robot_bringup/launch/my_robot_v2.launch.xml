@@ -42,7 +42,7 @@
         <!-- Throttle depth to 10Hz: /scan ở 30Hz khiến message filter queue đầy vì odom TF
              chưa kịp đến Desktop (WiFi lag). 10Hz giúp tf2 interpolate kịp cho mỗi scan. -->
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
-            args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled" />
+            args="messages /kinect/depth/image_raw 5.0 /kinect/depth/image_throttled" />
 
         <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
             <remap from="depth" to="/kinect/depth/image_throttled" />

@@ -16,7 +16,7 @@ slam_toolbox:
     scan_topic: /scan
     use_map_saver: true
     mode: mapping #localization
-    debug_logging: true
+    debug_logging: false
     throttle_scans: 1
     transform_publish_period: 0.02 #if 0 never publishes odometry
     map_update_interval: 5.0
@@ -33,8 +33,8 @@ slam_toolbox:
     # General Parameters
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.05
-    minimum_travel_heading: 0.05
+    minimum_travel_distance: 0.3
+    minimum_travel_heading: 0.2
     check_min_dist_and_heading_precisely: false
     scan_buffer_size: 10
     scan_buffer_maximum_scan_distance: 10.0
