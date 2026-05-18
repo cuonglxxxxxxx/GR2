@@ -61,9 +61,9 @@ slam_toolbox:
     distance_variance_penalty: 0.5      
     angle_variance_penalty: 1.0    
 
-    fine_search_angle_offset: 0.00349     
-    coarse_search_angle_offset: 0.349   
-    coarse_angle_resolution: 0.0349        
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 2.0
+    coarse_angle_resolution: 0.1
     minimum_angle_penalty: 0.9
     minimum_distance_penalty: 0.5
     use_response_expansion: true
