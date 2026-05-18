@@ -40,15 +40,15 @@ slam_toolbox:
     scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.1
     link_scan_maximum_distance: 1.5
-    loop_search_maximum_distance: 12.0
+    loop_search_maximum_distance: 25.0
     do_loop_closing: true
-    loop_match_minimum_chain_size: 3
+    loop_match_minimum_chain_size: 2
     loop_match_maximum_variance_coarse: 3.0
-    loop_match_minimum_response_coarse: 0.15
-    loop_match_minimum_response_fine: 0.25
+    loop_match_minimum_response_coarse: 0.1
+    loop_match_minimum_response_fine: 0.2
 
     # Correlation Parameters - Correlation Parameters
-    correlation_search_space_dimension: 0.5
+    correlation_search_space_dimension: 1.0
     correlation_search_space_resolution: 0.01
     correlation_search_space_smear_deviation: 0.1 
 
