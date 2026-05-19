@@ -17,6 +17,7 @@ slam_toolbox:
     use_map_saver: true
     mode: mapping #localization
     debug_logging: true
+    log_level: INFO
     throttle_scans: 1
     transform_publish_period: 0.02 #if 0 never publishes odometry
     map_update_interval: 5.0
@@ -42,10 +43,10 @@ slam_toolbox:
     link_scan_maximum_distance: 1.5
     loop_search_maximum_distance: 25.0
     do_loop_closing: true
-    loop_match_minimum_chain_size: 3
+    loop_match_minimum_chain_size: 2
     loop_match_maximum_variance_coarse: 3.0
-    loop_match_minimum_response_coarse: 0.35
-    loop_match_minimum_response_fine: 0.45
+    loop_match_minimum_response_coarse: 0.2
+    loop_match_minimum_response_fine: 0.3
 
     # Correlation Parameters - Correlation Parameters
     correlation_search_space_dimension: 1.5
