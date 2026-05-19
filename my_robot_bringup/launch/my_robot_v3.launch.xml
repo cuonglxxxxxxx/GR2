@@ -40,7 +40,7 @@
             <param name="range_min" value="0.5" />
             <param name="range_max" value="4.5" />
             <param name="scan_height" value="5" />
-            <param name="output_frame_id" value="kinect_link" />
+            <param name="output_frame" value="kinect_link" />
         </node>
 
         <!-- SLAM chạy local trên Pi: /scan và /tf cùng machine, không có WiFi timing issue -->
