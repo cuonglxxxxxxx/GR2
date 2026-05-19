@@ -40,11 +40,8 @@
             <param name="range_min" value="0.5" />
             <param name="range_max" value="4.5" />
             <param name="scan_height" value="5" />
-            <param name="output_frame_id" value="camera_link" />
+            <param name="output_frame_id" value="kinect_link" />
         </node>
-
-        <node pkg="tf2_ros" exec="static_transform_publisher" name="camera_depth_frame_tf"
-            args="--x 0 --y 0 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id kinect_link --child-frame-id camera_depth_frame" />
 
         <!-- SLAM chạy local trên Pi: /scan và /tf cùng machine, không có WiFi timing issue -->
         <include file="$(find-pkg-share slam_toolbox)/launch/online_async_launch.py" if="$(var slam)">
