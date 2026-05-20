@@ -32,7 +32,7 @@
 
         <!-- 2Hz: SLAM local không cần rate cao, giảm CPU load cho Pi -->
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
-            args="messages /kinect/depth/image_raw 5.0 /kinect/depth/image_throttled" />
+            args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled" />
 
         <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
             <remap from="depth" to="/kinect/depth/image_throttled" />

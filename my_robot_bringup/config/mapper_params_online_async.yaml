@@ -24,7 +24,7 @@ slam_toolbox:
     restamp_tf: false
     min_laser_range: 0.0 #for rastering images
     max_laser_range: 4.5
-    minimum_time_interval: 0.2
+    minimum_time_interval: 0.1
     transform_timeout: 0.5
     tf_buffer_duration: 14400.
     stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
@@ -33,12 +33,12 @@ slam_toolbox:
     # General Parameters
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.1
-    minimum_travel_heading: 0.2
-    check_min_dist_and_heading_precisely: false
+    minimum_travel_distance: 0.05
+    minimum_travel_heading: 0.1
+    check_min_dist_and_heading_precisely: true
     scan_buffer_size: 20
     scan_buffer_maximum_scan_distance: 10.0
-    link_match_minimum_response_fine: 0.35
+    link_match_minimum_response_fine: 0.2
     link_scan_maximum_distance: 1.5
     loop_search_maximum_distance: 25.0
     do_loop_closing: true
@@ -63,7 +63,7 @@ slam_toolbox:
 
     fine_search_angle_offset: 0.00349
     coarse_search_angle_offset: 0.349
-    coarse_angle_resolution: 0.0349
+    coarse_angle_resolution: 0.0175
     minimum_angle_penalty: 0.9
     minimum_distance_penalty: 0.5
     use_response_expansion: true
