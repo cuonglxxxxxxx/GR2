@@ -21,23 +21,17 @@
             <param name="approx_sync_max_interval" value="0.5"/>
             <param name="use_sim_time" value="false"/>
 
-            <!-- Tốc độ xử lý khung hình (Hz) — nên <= tần số throttle của Pi -->
-            <param name="Rtabmap/DetectionRate" value="1.0"/>
+            <!-- RTAB-Map params phải type="str" vì node khai báo chúng là string nội bộ -->
+            <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
+            <param name="Grid/Sensor" value="0" type="str"/>
+            <param name="Grid/RangeMax" value="3.5" type="str"/>
+            <param name="Vis/MinInliers" value="10" type="str"/>
+            <param name="RGBD/AngularUpdate" value="0.05" type="str"/>
+            <param name="RGBD/LinearUpdate" value="0.05" type="str"/>
 
-            <!-- 2D occupancy grid dùng laser scan (không dùng depth cloud) -->
-            <param name="Grid/Sensor" value="0"/>
-            <param name="Grid/RangeMax" value="3.5"/>
-
-            <!-- Loop closure: visual inliers tối thiểu cho Kinect v1 indoor -->
-            <param name="Vis/MinInliers" value="10"/>
-
-            <!-- Thêm node vào graph khi di chuyển >= 5cm hoặc >= 5° -->
-            <param name="RGBD/AngularUpdate" value="0.05"/>
-            <param name="RGBD/LinearUpdate" value="0.05"/>
-
-            <!-- Remap topics từ Kinect (throttled từ Raspberry Pi) -->
-            <remap from="rgb/image" to="/kinect/rgb/image_rtabmap"/>
-            <remap from="rgb/camera_info" to="/kinect/rgb/camera_info"/>
+            <!-- kinect_ros2 publish /kinect/image_raw (không có /rgb/ sub-namespace) -->
+            <remap from="rgb/image" to="/kinect/image_rtabmap"/>
+            <remap from="rgb/camera_info" to="/kinect/camera_info"/>
             <remap from="depth/image" to="/kinect/depth/image_rtabmap"/>
             <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
             <remap from="scan" to="/scan"/>
@@ -76,9 +70,9 @@
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
               args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
 
-        <!-- RGB 3Hz cho RTAB-Map visual loop closure -->
+        <!-- RGB 3Hz cho RTAB-Map (kinect_ros2 publish /kinect/image_raw, không có /rgb/) -->
         <node pkg="topic_tools" exec="throttle" name="rgb_rtabmap_throttle" output="screen"
-              args="messages /kinect/rgb/image_raw 3.0 /kinect/rgb/image_rtabmap"/>
+              args="messages /kinect/image_raw 3.0 /kinect/image_rtabmap"/>
 
         <!-- Depth 3Hz cho RTAB-Map (tách riêng khỏi 10Hz throttle của depthimage_to_laserscan) -->
         <node pkg="topic_tools" exec="throttle" name="depth_rtabmap_throttle" output="screen"
