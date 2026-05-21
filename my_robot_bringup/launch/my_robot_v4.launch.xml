@@ -20,6 +20,8 @@
             <param name="approx_sync" value="true"/>
             <param name="approx_sync_max_interval" value="0.5"/>
             <param name="use_sim_time" value="false"/>
+            <param name="qos_image" value="1"/>
+            <param name="qos_camera_info" value="1"/>
 
             <!-- RTAB-Map params phải type="str" vì node khai báo chúng là string nội bộ -->
             <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
