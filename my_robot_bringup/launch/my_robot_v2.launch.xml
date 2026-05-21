@@ -49,7 +49,7 @@
             <remap from="depth_camera_info" to="/kinect/depth/camera_info" />
             <param name="range_min" value="0.5" />
             <param name="range_max" value="3.5" />
-            <param name="scan_height" value="1" />
+            <param name="scan_height" value="3" />
             <param name="output_frame" value="kinect_link" />
         </node>
 
