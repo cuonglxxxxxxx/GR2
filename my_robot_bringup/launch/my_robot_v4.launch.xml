@@ -5,46 +5,13 @@
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
     <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
 
-    <!-- ===== DESKTOP MODE: RTAB-Map + RViz ===== -->
+    <!-- ===== DESKTOP MODE: RViz only ===== -->
     <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
-
-        <!-- RTAB-Map: visual loop closure RGB-D + 2D grid từ scan.
-             args delete_db_on_start: xoá DB cũ để bắt đầu map mới.
-             Xoá arg đó nếu muốn tiếp tục map cũ hoặc dùng localization mode. -->
-        <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen"
-              args="--delete_db_on_start">
-            <param name="frame_id" value="base_footprint"/>
-            <param name="odom_frame_id" value="odom"/>
-            <param name="subscribe_depth" value="true"/>
-            <param name="subscribe_scan" value="true"/>
-            <param name="approx_sync" value="true"/>
-            <param name="approx_sync_max_interval" value="0.5"/>
-            <param name="use_sim_time" value="false"/>
-            <param name="qos_image" value="1"/>
-            <param name="qos_camera_info" value="1"/>
-
-            <!-- RTAB-Map params phải type="str" vì node khai báo chúng là string nội bộ -->
-            <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
-            <param name="Grid/Sensor" value="0" type="str"/>
-            <param name="Grid/RangeMax" value="3.5" type="str"/>
-            <param name="Vis/MinInliers" value="10" type="str"/>
-            <param name="RGBD/AngularUpdate" value="0.05" type="str"/>
-            <param name="RGBD/LinearUpdate" value="0.05" type="str"/>
-
-            <!-- kinect_ros2 publish /kinect/image_raw (không có /rgb/ sub-namespace) -->
-            <remap from="rgb/image" to="/kinect/image_rtabmap"/>
-            <remap from="rgb/camera_info" to="/kinect/camera_info"/>
-            <remap from="depth/image" to="/kinect/depth/image_rtabmap"/>
-            <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
-            <remap from="scan" to="/scan"/>
-            <remap from="odom" to="/odom"/>
-        </node>
-
         <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen"
               args="-d $(var rviz_config_path)" if="$(var rviz)"/>
     </group>
 
-    <!-- ===== RASPBERRY PI MODE: Base + sensors + throttle cho RTAB-Map ===== -->
+    <!-- ===== RASPBERRY PI MODE: Sensors + RTAB-Map (all local, no WiFi image streaming) ===== -->
     <group if="$(eval '\'$(var mode)\' == \'raspberry\'')">
         <node pkg="robot_state_publisher" exec="robot_state_publisher">
             <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
@@ -68,19 +35,10 @@
 
         <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen"/>
 
-        <!-- Depth 10Hz cho depthimage_to_laserscan → /scan (giữ nguyên từ v2) -->
+        <!-- Depth 10Hz cho depthimage_to_laserscan (giảm CPU) -->
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
               args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
 
-        <!-- RGB 3Hz cho RTAB-Map (kinect_ros2 publish /kinect/image_raw, không có /rgb/) -->
-        <node pkg="topic_tools" exec="throttle" name="rgb_rtabmap_throttle" output="screen"
-              args="messages /kinect/image_raw 3.0 /kinect/image_rtabmap"/>
-
-        <!-- Depth 3Hz cho RTAB-Map (tách riêng khỏi 10Hz throttle của depthimage_to_laserscan) -->
-        <node pkg="topic_tools" exec="throttle" name="depth_rtabmap_throttle" output="screen"
-              args="messages /kinect/depth/image_raw 3.0 /kinect/depth/image_rtabmap"/>
-
-        <!-- depthimage_to_laserscan: dùng 10Hz depth → /scan (giống v2) -->
         <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
             <remap from="depth" to="/kinect/depth/image_throttled"/>
             <remap from="depth_camera_info" to="/kinect/depth/camera_info"/>
@@ -88,6 +46,33 @@
             <param name="range_max" value="3.5"/>
             <param name="scan_height" value="3"/>
             <param name="output_frame" value="kinect_link"/>
+        </node>
+
+        <!-- RTAB-Map chay local tren Pi: subscribe truc tiep raw topics, khong can WiFi stream -->
+        <!-- delete_db_on_start: xoa map cu khi khoi dong lai. Xoa flag nay de tiep tuc map cu. -->
+        <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen"
+              args="--delete_db_on_start">
+            <param name="frame_id" value="base_footprint"/>
+            <param name="odom_frame_id" value="odom"/>
+            <param name="subscribe_depth" value="true"/>
+            <param name="subscribe_scan" value="true"/>
+            <param name="approx_sync" value="true"/>
+            <param name="approx_sync_max_interval" value="0.2"/>
+            <param name="use_sim_time" value="false"/>
+
+            <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
+            <param name="Grid/Sensor" value="0" type="str"/>
+            <param name="Grid/RangeMax" value="3.5" type="str"/>
+            <param name="Vis/MinInliers" value="10" type="str"/>
+            <param name="RGBD/AngularUpdate" value="0.05" type="str"/>
+            <param name="RGBD/LinearUpdate" value="0.05" type="str"/>
+
+            <remap from="rgb/image" to="/kinect/image_raw"/>
+            <remap from="rgb/camera_info" to="/kinect/camera_info"/>
+            <remap from="depth/image" to="/kinect/depth/image_raw"/>
+            <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
+            <remap from="scan" to="/scan"/>
+            <remap from="odom" to="/odom"/>
         </node>
     </group>
 </launch>
