@@ -1,0 +1,104 @@
+<launch>
+    <arg name="mode" default="desktop" />
+    <arg name="rviz" default="true" />
+
+    <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
+    <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
+
+    <!-- ===== DESKTOP MODE: RTAB-Map + RViz ===== -->
+    <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
+
+        <!--
+            RTAB-Map: visual loop closure (Kinect RGB-D) + 2D occupancy grid từ /scan
+            - subscribe_depth=true: sync RGB+Depth nội bộ (không cần rgbd_sync node riêng)
+            - subscribe_scan=true: dùng laser scan cho occupancy grid (chính xác với FOV 60°)
+            - approx_sync=true: bù WiFi lag giữa các topic
+            - Grid/Sensor=0: build 2D map từ /scan thay vì từ depth cloud
+            - Rtabmap/DetectionRate=1.0: xử lý 1 frame/s, phù hợp input 3Hz throttled
+            - --delete_db_on_start: bắt đầu map mới mỗi lần chạy (xoá rtabmap.db cũ)
+              Xoá flag này nếu muốn tiếp tục map cũ (localization + resume)
+        -->
+        <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen"
+              args="--delete_db_on_start">
+            <param name="frame_id" value="base_footprint"/>
+            <param name="odom_frame_id" value="odom"/>
+            <param name="subscribe_depth" value="true"/>
+            <param name="subscribe_scan" value="true"/>
+            <param name="approx_sync" value="true"/>
+            <param name="approx_sync_max_interval" value="0.5"/>
+            <param name="use_sim_time" value="false"/>
+
+            <!-- Tốc độ xử lý khung hình (Hz) — nên <= tần số throttle của Pi -->
+            <param name="Rtabmap/DetectionRate" value="1.0"/>
+
+            <!-- 2D occupancy grid dùng laser scan (không dùng depth cloud) -->
+            <param name="Grid/Sensor" value="0"/>
+            <param name="Grid/RangeMax" value="3.5"/>
+
+            <!-- Loop closure: visual inliers tối thiểu cho Kinect v1 indoor -->
+            <param name="Vis/MinInliers" value="10"/>
+
+            <!-- Thêm node vào graph khi di chuyển >= 5cm hoặc >= 5° -->
+            <param name="RGBD/AngularUpdate" value="0.05"/>
+            <param name="RGBD/LinearUpdate" value="0.05"/>
+
+            <!-- Remap topics từ Kinect (throttled từ Raspberry Pi) -->
+            <remap from="rgb/image" to="/kinect/rgb/image_rtabmap"/>
+            <remap from="rgb/camera_info" to="/kinect/rgb/camera_info"/>
+            <remap from="depth/image" to="/kinect/depth/image_rtabmap"/>
+            <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
+            <remap from="scan" to="/scan"/>
+            <remap from="odom" to="/odom"/>
+        </node>
+
+        <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen"
+              args="-d $(var rviz_config_path)" if="$(var rviz)"/>
+    </group>
+
+    <!-- ===== RASPBERRY PI MODE: Base + sensors + throttle cho RTAB-Map ===== -->
+    <group if="$(eval '\'$(var mode)\' == \'raspberry\'')">
+        <node pkg="robot_state_publisher" exec="robot_state_publisher">
+            <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
+            <param name="publish_frequency" value="50.0"/>
+            <param name="use_sim_time" value="false"/>
+        </node>
+
+        <node pkg="normalized_cmd" exec="normalized_cmd" name="cmd_vel_normalizer" output="screen">
+            <param name="use_sim_time" value="false"/>
+        </node>
+
+        <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
+            <param name="use_sim_time" value="false"/>
+        </node>
+
+        <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
+            <param name="source_list" value="['/joint_states']"/>
+            <param name="rate" value="50"/>
+            <param name="use_sim_time" value="false"/>
+        </node>
+
+        <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen"/>
+
+        <!-- Depth 10Hz cho depthimage_to_laserscan → /scan (giữ nguyên từ v2) -->
+        <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
+              args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
+
+        <!-- RGB 3Hz cho RTAB-Map visual loop closure -->
+        <node pkg="topic_tools" exec="throttle" name="rgb_rtabmap_throttle" output="screen"
+              args="messages /kinect/rgb/image_raw 3.0 /kinect/rgb/image_rtabmap"/>
+
+        <!-- Depth 3Hz cho RTAB-Map (tách riêng khỏi 10Hz throttle của depthimage_to_laserscan) -->
+        <node pkg="topic_tools" exec="throttle" name="depth_rtabmap_throttle" output="screen"
+              args="messages /kinect/depth/image_raw 3.0 /kinect/depth/image_rtabmap"/>
+
+        <!-- depthimage_to_laserscan: dùng 10Hz depth → /scan (giống v2) -->
+        <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
+            <remap from="depth" to="/kinect/depth/image_throttled"/>
+            <remap from="depth_camera_info" to="/kinect/depth/camera_info"/>
+            <param name="range_min" value="0.5"/>
+            <param name="range_max" value="3.5"/>
+            <param name="scan_height" value="3"/>
+            <param name="output_frame" value="kinect_link"/>
+        </node>
+    </group>
+</launch>
