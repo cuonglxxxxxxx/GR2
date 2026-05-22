@@ -44,7 +44,7 @@
             <remap from="depth_camera_info" to="/kinect/depth/camera_info"/>
             <param name="range_min" value="0.5"/>
             <param name="range_max" value="3.5"/>
-            <param name="scan_height" value="3"/>
+            <param name="scan_height" value="10"/>
             <param name="output_frame" value="kinect_link"/>
         </node>
 
@@ -63,7 +63,7 @@
             <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
             <param name="Grid/Sensor" value="0" type="str"/>
             <param name="Grid/RangeMax" value="3.5" type="str"/>
-            <param name="Vis/MinInliers" value="10" type="str"/>
+            <param name="Vis/MinInliers" value="20" type="str"/>
             <param name="RGBD/AngularUpdate" value="0.05" type="str"/>
             <param name="RGBD/LinearUpdate" value="0.05" type="str"/>
 
