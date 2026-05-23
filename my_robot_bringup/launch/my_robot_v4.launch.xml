@@ -3,11 +3,13 @@
     <arg name="rviz" default="true" />
     <arg name="map_name" default="my_map" />
     <arg name="localization" default="false" />
+    <arg name="nav" default="false" />
 
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
     <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
     <!-- Dung duong dan mac dinh .ros de dam bao quyen ghi -->
     <let name="db_path" value="/home/cuong/.ros/rtabmap_$(var map_name).db" />
+    <let name="nav2_params_path" value="$(find-pkg-share my_robot_bringup)/config/nav2_params.yaml" />
 
     <!-- ===== DESKTOP MODE: RViz only ===== -->
     <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
@@ -128,6 +130,30 @@
                 <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
                 <remap from="scan" to="/scan"/>
                 <remap from="odom" to="/odom"/>
+            </node>
+        </group>
+
+        <!-- ===== NAV2 STACK (nav==true) — chay cung pure_localization ===== -->
+        <!-- Khong dung navigation_launch.py mac dinh vi: -->
+        <!-- 1. No remap cmd_vel -> cmd_vel_nav (pha flow normalized_cmd cua ta) -->
+        <!-- 2. No include 10 lifecycle nodes (route, collision_monitor, docking...) - khong can -->
+        <group if="$(var nav)">
+            <node pkg="nav2_controller" exec="controller_server" name="controller_server" output="screen">
+                <param from="$(var nav2_params_path)"/>
+            </node>
+            <node pkg="nav2_planner" exec="planner_server" name="planner_server" output="screen">
+                <param from="$(var nav2_params_path)"/>
+            </node>
+            <node pkg="nav2_behaviors" exec="behavior_server" name="behavior_server" output="screen">
+                <param from="$(var nav2_params_path)"/>
+            </node>
+            <node pkg="nav2_bt_navigator" exec="bt_navigator" name="bt_navigator" output="screen">
+                <param from="$(var nav2_params_path)"/>
+            </node>
+            <node pkg="nav2_lifecycle_manager" exec="lifecycle_manager" name="lifecycle_manager_navigation" output="screen">
+                <param name="autostart" value="true"/>
+                <param name="node_names" value="[controller_server, planner_server, behavior_server, bt_navigator]"/>
+                <param name="use_sim_time" value="false"/>
             </node>
         </group>
     </group>
