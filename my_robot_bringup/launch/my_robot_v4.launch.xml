@@ -14,7 +14,7 @@
               args="-d $(var rviz_config_path)" if="$(var rviz)"/>
     </group>
 
-    <!-- ===== RASPBERRY PI MODE: Sensors + RTAB-Map (all local, no WiFi image streaming) ===== -->
+    <!-- ===== RASPBERRY PI MODE: Sensors + RTAB-Map ===== -->
     <group if="$(eval '\'$(var mode)\' == \'raspberry\'')">
         <node pkg="robot_state_publisher" exec="robot_state_publisher">
             <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
@@ -38,7 +38,6 @@
 
         <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen"/>
 
-        <!-- Depth 10Hz cho depthimage_to_laserscan (giảm CPU) -->
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
               args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
 
@@ -51,7 +50,7 @@
             <param name="output_frame" value="kinect_link"/>
         </node>
 
-        <!-- RTAB-Map Mapping Mode (localization:=false) -->
+        <!-- RTAB-Map Mapping Mode (localization == false) -->
         <group if="$(eval '\'$(var localization)\' == \'false\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen" args="--delete_db_on_start">
                 <param name="database_path" value="$(var db_path)"/>
@@ -77,8 +76,8 @@
             </node>
         </group>
 
-        <!-- RTAB-Map Localization/Resume Mode (localization:=true or pure_localization) -->
-        <group unless="$(eval '\'$(var localization)\' == \'false\'')">
+        <!-- RTAB-Map Resume Mapping Mode (localization == true) -->
+        <group if="$(eval '\'$(var localization)\' == \'true\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen">
                 <param name="database_path" value="$(var db_path)"/>
                 <param name="frame_id" value="base_footprint"/>
@@ -88,10 +87,34 @@
                 <param name="approx_sync" value="true"/>
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
-                
-                <param name="Mem/IncrementalMemory" value="true" if="$(eval '\'$(var localization)\' == \'true\'')"/>
-                <param name="Mem/IncrementalMemory" value="false" if="$(eval '\'$(var localization)\' == \'pure_localization\'')"/>
+                <param name="Mem/IncrementalMemory" value="true"/>
+                <param name="Rtabmap/DetectionRate" value="1.0"/>
+                <param name="Grid/Sensor" value="0"/>
+                <param name="Grid/RangeMax" value="3.5"/>
+                <param name="Vis/MinInliers" value="20"/>
+                <param name="RGBD/AngularUpdate" value="0.05"/>
+                <param name="RGBD/LinearUpdate" value="0.05"/>
+                <remap from="rgb/image" to="/kinect/image_raw"/>
+                <remap from="rgb/camera_info" to="/kinect/camera_info"/>
+                <remap from="depth/image" to="/kinect/depth/image_raw"/>
+                <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
+                <remap from="scan" to="/scan"/>
+                <remap from="odom" to="/odom"/>
+            </node>
+        </group>
 
+        <!-- RTAB-Map Pure Localization Mode (localization == pure_localization) -->
+        <group if="$(eval '\'$(var localization)\' == \'pure_localization\'')">
+            <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen">
+                <param name="database_path" value="$(var db_path)"/>
+                <param name="frame_id" value="base_footprint"/>
+                <param name="odom_frame_id" value="odom"/>
+                <param name="subscribe_depth" value="true"/>
+                <param name="subscribe_scan" value="true"/>
+                <param name="approx_sync" value="true"/>
+                <param name="approx_sync_max_interval" value="0.2"/>
+                <param name="use_sim_time" value="false"/>
+                <param name="Mem/IncrementalMemory" value="false"/>
                 <param name="Rtabmap/DetectionRate" value="1.0"/>
                 <param name="Grid/Sensor" value="0"/>
                 <param name="Grid/RangeMax" value="3.5"/>
