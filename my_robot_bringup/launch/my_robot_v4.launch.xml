@@ -6,7 +6,8 @@
 
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
     <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
-    <let name="db_path" value="/home/cuong/maps/$(var map_name).db" />
+    <!-- Dung duong dan mac dinh .ros de dam bao quyen ghi -->
+    <let name="db_path" value="/home/cuong/.ros/rtabmap_$(var map_name).db" />
 
     <!-- ===== DESKTOP MODE: RViz only ===== -->
     <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
