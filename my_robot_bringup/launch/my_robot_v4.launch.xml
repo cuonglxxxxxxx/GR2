@@ -88,7 +88,7 @@
                 <param name="approx_sync" value="true"/>
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
-                <param name="Mem/IncrementalMemory" value="true"/>
+                <param name="Mem/IncrementalMemory" value="true" type="str"/>
                 <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
@@ -115,7 +115,7 @@
                 <param name="approx_sync" value="true"/>
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
-                <param name="Mem/IncrementalMemory" value="false"/>
+                <param name="Mem/IncrementalMemory" value="false" type="str"/>
                 <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
