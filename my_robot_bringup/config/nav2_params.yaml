@@ -30,40 +30,49 @@ controller_server:
     goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
 
+    # PoseProgressChecker dem ca rotation, khong fail khi rotate-in-place
     progress_checker:
-      plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.5
-      movement_time_allowance: 10.0
+      plugin: "nav2_controller::PoseProgressChecker"
+      required_movement_radius: 0.3
+      required_movement_angle: 0.5
+      movement_time_allowance: 20.0
 
     general_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.20
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.35
       stateful: True
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.35
-      lookahead_dist: 0.5
-      min_lookahead_dist: 0.3
-      max_lookahead_dist: 0.8
+      # Toc do — khop teleop user (0.07 m/s)
+      desired_linear_vel: 0.07
+      min_approach_linear_velocity: 0.03
+      approach_velocity_scaling_dist: 0.3
+      # Lookahead nho cho robot di rat cham
+      lookahead_dist: 0.18
+      min_lookahead_dist: 0.12
+      max_lookahead_dist: 0.25
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 1.2
-      transform_tolerance: 0.2
       use_velocity_scaled_lookahead_dist: true
-      min_approach_linear_velocity: 0.05
-      approach_velocity_scaling_dist: 0.6
-      use_collision_detection: true
-      max_allowed_time_to_collision_up_to_carrot: 1.0
+      # Rotation — chi 1/2 teleop turn (1.0 -> 0.5 rad/s)
+      rotate_to_heading_angular_vel: 0.5
+      max_angular_accel: 1.0
+      use_rotate_to_heading: true
+      rotate_to_heading_min_angle: 0.523    # 30 deg
+      allow_reversing: false
+      # Regulation
       use_regulated_linear_velocity_scaling: true
       use_cost_regulated_linear_velocity_scaling: false
-      regulated_linear_scaling_min_radius: 0.9
-      regulated_linear_scaling_min_speed: 0.10
-      use_rotate_to_heading: true
-      allow_reversing: false
-      rotate_to_heading_min_angle: 0.785
-      max_angular_accel: 2.0
+      regulated_linear_scaling_min_radius: 0.5
+      regulated_linear_scaling_min_speed: 0.03
+      # Collision check
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 1.5
+      # TF
+      transform_tolerance: 0.3
       max_robot_pose_search_dist: 10.0
+      # Cost
       cost_scaling_dist: 0.3
       cost_scaling_gain: 1.0
       inflation_cost_scaling_factor: 3.0
@@ -193,9 +202,9 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 0.3
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.5
-    min_rotational_vel: 0.3
-    rotational_acc_lim: 2.5
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.15
+    rotational_acc_lim: 1.0
 
 velocity_smoother:
   ros__parameters:
