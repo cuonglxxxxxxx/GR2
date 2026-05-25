@@ -22,10 +22,12 @@ controller_server:
   ros__parameters:
     use_sim_time: false
     controller_frequency: 10.0
-    # Dead-zone: cmd duoi nguong se bi zero-out (khong gui xuong motor)
-    min_x_velocity_threshold: 0.04
+    # Dead-zone + stiction: cmd duoi nguong se bi zero-out
+    # Linear: 0.04 ok, them buffer = 0.06
+    # Angular: stiction 1.5 rad/s la nguong quay tuc thi
+    min_x_velocity_threshold: 0.06
     min_y_velocity_threshold: 0.5
-    min_theta_velocity_threshold: 0.30
+    min_theta_velocity_threshold: 1.5
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
     goal_checker_plugins: ["general_goal_checker"]
@@ -46,9 +48,9 @@ controller_server:
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      # Toc do — phai vuot dead-zone motor (0.04 m/s), de buffer an toan 0.10
-      desired_linear_vel: 0.10
-      min_approach_linear_velocity: 0.05
+      # Toc do — vuot linear dead-zone (0.04 m/s) + buffer
+      desired_linear_vel: 0.12
+      min_approach_linear_velocity: 0.08
       approach_velocity_scaling_dist: 0.25
       # Lookahead lon hon de curvature mem hon
       lookahead_dist: 0.25
@@ -56,11 +58,11 @@ controller_server:
       max_lookahead_dist: 0.35
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
-      # Rotation — phai vuot angular dead-zone (~0.30 rad/s)
-      rotate_to_heading_angular_vel: 1.0
-      max_angular_accel: 1.5
+      # Rotation — phai vuot stiction (1.5 rad/s), dat 2.0 cho an toan
+      rotate_to_heading_angular_vel: 2.0
+      max_angular_accel: 3.0
       use_rotate_to_heading: true
-      rotate_to_heading_min_angle: 0.17     # 10 deg — trigger som de tan dung pure rotation
+      rotate_to_heading_min_angle: 0.05     # ~3 deg — luon xoay truoc khi tien (vi angular nho bi threshold zero-out)
       allow_reversing: false
       # Regulation — TAT, vi no la thu zero-out linear khi curvature cao
       use_regulated_linear_velocity_scaling: false
@@ -203,10 +205,10 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 0.3
     simulate_ahead_time: 2.0
-    # Recovery behaviors (Spin/BackUp) — phai vuot angular dead-zone (~0.30 rad/s)
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.35
-    rotational_acc_lim: 1.5
+    # Recovery behaviors (Spin) — phai vuot stiction (1.5 rad/s)
+    max_rotational_vel: 2.0
+    min_rotational_vel: 1.5
+    rotational_acc_lim: 3.0
 
 velocity_smoother:
   ros__parameters:
