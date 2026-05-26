@@ -27,7 +27,7 @@ controller_server:
     # Angular: stiction 1.5 rad/s la nguong quay tuc thi
     min_x_velocity_threshold: 0.06
     min_y_velocity_threshold: 0.5
-    min_theta_velocity_threshold: 1.5
+    min_theta_velocity_threshold: 0.1
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
     goal_checker_plugins: ["general_goal_checker"]
@@ -59,10 +59,10 @@ controller_server:
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
       # Rotation — phai vuot stiction (1.5 rad/s), dat 2.0 cho an toan
-      rotate_to_heading_angular_vel: 2.0
-      max_angular_accel: 3.0
+      rotate_to_heading_angular_vel: 0.8
+      max_angular_accel: 6.0
       use_rotate_to_heading: true
-      rotate_to_heading_min_angle: 0.25     # ~14 deg — noi rong de tranh re-trigger khi pose nhieu/tre TF
+      rotate_to_heading_min_angle: 0.4      # ~23 deg — du rong cho overshoot do TF lag
       allow_reversing: false
       # Regulation — TAT, vi no la thu zero-out linear khi curvature cao
       use_regulated_linear_velocity_scaling: false
@@ -205,10 +205,10 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 1.0
     simulate_ahead_time: 2.0
-    # Recovery behaviors (Spin) — phai vuot stiction (1.5 rad/s)
-    max_rotational_vel: 2.0
-    min_rotational_vel: 1.5
-    rotational_acc_lim: 3.0
+    # Recovery behaviors (Spin) — sau firmware fix khong can vuot stiction cao
+    max_rotational_vel: 0.8
+    min_rotational_vel: 0.5
+    rotational_acc_lim: 6.0
 
 velocity_smoother:
   ros__parameters:
