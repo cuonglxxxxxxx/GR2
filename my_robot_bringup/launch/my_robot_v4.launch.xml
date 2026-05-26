@@ -64,12 +64,12 @@
                 <param name="approx_sync" value="true"/>
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
-                <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
+                <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
                 <param name="Vis/MinInliers" value="20" type="str"/>
-                <param name="RGBD/AngularUpdate" value="0.05" type="str"/>
-                <param name="RGBD/LinearUpdate" value="0.05" type="str"/>
+                <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
+                <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <remap from="rgb/image" to="/kinect/image_raw"/>
                 <remap from="rgb/camera_info" to="/kinect/camera_info"/>
                 <remap from="depth/image" to="/kinect/depth/image_raw"/>
@@ -91,12 +91,12 @@
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
                 <param name="Mem/IncrementalMemory" value="true" type="str"/>
-                <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
+                <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
                 <param name="Vis/MinInliers" value="20" type="str"/>
-                <param name="RGBD/AngularUpdate" value="0.05" type="str"/>
-                <param name="RGBD/LinearUpdate" value="0.05" type="str"/>
+                <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
+                <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <remap from="rgb/image" to="/kinect/image_raw"/>
                 <remap from="rgb/camera_info" to="/kinect/camera_info"/>
                 <remap from="depth/image" to="/kinect/depth/image_raw"/>
@@ -118,12 +118,12 @@
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
                 <param name="Mem/IncrementalMemory" value="false" type="str"/>
-                <param name="Rtabmap/DetectionRate" value="1.0" type="str"/>
+                <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
                 <param name="Vis/MinInliers" value="20" type="str"/>
-                <param name="RGBD/AngularUpdate" value="0.05" type="str"/>
-                <param name="RGBD/LinearUpdate" value="0.05" type="str"/>
+                <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
+                <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <remap from="rgb/image" to="/kinect/image_raw"/>
                 <remap from="rgb/camera_info" to="/kinect/camera_info"/>
                 <remap from="depth/image" to="/kinect/depth/image_raw"/>
