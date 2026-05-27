@@ -61,7 +61,7 @@ controller_server:
       # Rotation — phai vuot stiction (1.5 rad/s), dat 2.0 cho an toan
       rotate_to_heading_angular_vel: 0.8
       max_angular_accel: 6.0
-      use_rotate_to_heading: true
+      use_rotate_to_heading: false           # TAT: rotate-only mode bi velocity_smoother ramp cham (~0.18 rad/s) khong vuot stiction. Pure Pursuit se phat linear+angular dong thoi → robot vua tien vua quay theo curvature
       rotate_to_heading_min_angle: 0.4      # ~23 deg — du rong cho overshoot do TF lag
       allow_reversing: false
       # Regulation — TAT, vi no la thu zero-out linear khi curvature cao
