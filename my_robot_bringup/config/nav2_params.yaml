@@ -58,8 +58,8 @@ controller_server:
       max_lookahead_dist: 0.35
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
-      # Rotation — vuot stiction (1.5 rad/s)
-      rotate_to_heading_angular_vel: 1.6
+      # Rotation — giam de tranh overshoot quan tinh khi motor.stop() (motor coast, khong brake)
+      rotate_to_heading_angular_vel: 0.8
       max_angular_accel: 6.0
       use_rotate_to_heading: true            # BAT lai: can de align yaw cuoi tai goal (smoother cap angular da nang len 2.0 du ramp qua stiction)
       rotate_to_heading_min_angle: 0.6      # ~34 deg — chi rotate-only khi heading lech nhieu, tranh kich hoat giua duong
