@@ -42,8 +42,8 @@ controller_server:
 
     general_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.35
+      xy_goal_tolerance: 0.08      # ~8cm, that chat hon nhieu so voi 25cm cu
+      yaw_goal_tolerance: 0.10     # ~5.7 deg
       stateful: True
 
     FollowPath:
@@ -58,11 +58,11 @@ controller_server:
       max_lookahead_dist: 0.35
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
-      # Rotation — phai vuot stiction (1.5 rad/s), dat 2.0 cho an toan
-      rotate_to_heading_angular_vel: 0.8
+      # Rotation — vuot stiction (1.5 rad/s)
+      rotate_to_heading_angular_vel: 1.6
       max_angular_accel: 6.0
-      use_rotate_to_heading: false           # TAT: rotate-only mode bi velocity_smoother ramp cham (~0.18 rad/s) khong vuot stiction. Pure Pursuit se phat linear+angular dong thoi → robot vua tien vua quay theo curvature
-      rotate_to_heading_min_angle: 0.4      # ~23 deg — du rong cho overshoot do TF lag
+      use_rotate_to_heading: true            # BAT lai: can de align yaw cuoi tai goal (smoother cap angular da nang len 2.0 du ramp qua stiction)
+      rotate_to_heading_min_angle: 0.6      # ~34 deg — chi rotate-only khi heading lech nhieu, tranh kich hoat giua duong
       allow_reversing: false
       # Regulation — TAT, vi no la thu zero-out linear khi curvature cao
       use_regulated_linear_velocity_scaling: false
@@ -216,10 +216,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 1.0]      # giam cap toc do: linear 0.15 m/s, angular 1.0 rad/s — tranh motion blur lam RTAB-Map mat features
-    min_velocity: [-0.1, 0.0, -1.0]
-    max_accel: [0.6, 0.0, 1.5]          # ramp mem hon
-    max_decel: [-0.6, 0.0, -1.5]
+    max_velocity: [0.15, 0.0, 2.0]      # angular 2.0 rad/s du cho rotate-to-heading (1.6) ramp vuot stiction
+    min_velocity: [-0.1, 0.0, -2.0]
+    max_accel: [0.6, 0.0, 3.0]          # angular accel cao hon de ramp nhanh qua stiction
+    max_decel: [-0.6, 0.0, -3.0]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
