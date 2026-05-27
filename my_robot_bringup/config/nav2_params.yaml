@@ -48,8 +48,8 @@ controller_server:
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      # Toc do — vuot linear dead-zone (0.04 m/s) + buffer
-      desired_linear_vel: 0.12
+      # Toc do — giam de Kinect/RTAB-Map khong mat visual features do motion blur
+      desired_linear_vel: 0.08
       min_approach_linear_velocity: 0.08
       approach_velocity_scaling_dist: 0.25
       # Lookahead lon hon de curvature mem hon
@@ -216,10 +216,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.4, 0.0, 2.0]
-    min_velocity: [-0.1, 0.0, -2.0]
-    max_accel: [1.0, 0.0, 2.5]
-    max_decel: [-1.0, 0.0, -2.5]
+    max_velocity: [0.15, 0.0, 1.0]      # giam cap toc do: linear 0.15 m/s, angular 1.0 rad/s — tranh motion blur lam RTAB-Map mat features
+    min_velocity: [-0.1, 0.0, -1.0]
+    max_accel: [0.6, 0.0, 1.5]          # ramp mem hon
+    max_decel: [-0.6, 0.0, -1.5]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
