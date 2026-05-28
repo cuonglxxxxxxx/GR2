@@ -21,7 +21,7 @@ bt_navigator:
 controller_server:
   ros__parameters:
     use_sim_time: false
-    controller_frequency: 5.0
+    controller_frequency: 20.0  # 5Hz cycle 200ms tai 0.8 rad/s = 9.2 deg overshoot per cycle. 20Hz cycle 50ms = 2.3 deg, du chinh xac
     # Dead-zone + stiction: cmd duoi nguong se bi zero-out
     # Linear: 0.04 ok, them buffer = 0.06
     # Angular: stiction 1.5 rad/s la nguong quay tuc thi
@@ -44,7 +44,7 @@ controller_server:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.08      # ~8cm, that chat hon nhieu so voi 25cm cu
       yaw_goal_tolerance: 0.10     # ~5.7 deg
-      stateful: True
+      stateful: False              # True ghi nho "tung dat tolerance" → succeed khi yaw da quay qua. False = robot phai DUNG trong tolerance
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
@@ -58,8 +58,8 @@ controller_server:
       max_lookahead_dist: 0.35
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
-      # Rotation — giam de tranh overshoot quan tinh khi motor.stop() (motor coast, khong brake)
-      rotate_to_heading_angular_vel: 0.8
+      # Rotation — giam them de moi cycle 50ms (controller 20Hz) chi quay 0.02 rad = 1.15 deg, cho phep dung dung tolerance
+      rotate_to_heading_angular_vel: 0.4
       max_angular_accel: 6.0
       use_rotate_to_heading: true            # BAT lai: can de align yaw cuoi tai goal (smoother cap angular da nang len 2.0 du ramp qua stiction)
       rotate_to_heading_min_angle: 0.6      # ~34 deg — chi rotate-only khi heading lech nhieu, tranh kich hoat giua duong
