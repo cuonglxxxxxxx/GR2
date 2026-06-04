@@ -4,12 +4,14 @@
     <arg name="map_name" default="my_map" />
     <arg name="localization" default="false" />
     <arg name="nav" default="false" />
+    <arg name="explore" default="false" />
 
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
     <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
     <!-- Dung duong dan mac dinh .ros de dam bao quyen ghi -->
     <let name="db_path" value="/home/cuong/.ros/rtabmap_$(var map_name).db" />
     <let name="nav2_params_path" value="$(find-pkg-share my_robot_bringup)/config/nav2_params.yaml" />
+    <let name="explore_params_path" value="$(find-pkg-share my_robot_bringup)/config/explore_params.yaml" />
 
     <!-- ===== DESKTOP MODE: RViz only ===== -->
     <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
@@ -154,6 +156,15 @@
                 <param name="autostart" value="true"/>
                 <param name="node_names" value="[controller_server, planner_server, behavior_server, bt_navigator]"/>
                 <param name="use_sim_time" value="false"/>
+            </node>
+        </group>
+
+        <!-- ===== FRONTIER EXPLORATION (explore==true) — yeu cau nav==true ===== -->
+        <!-- explore_lite tu chon frontier, goi action navigate_to_pose cua bt_navigator -->
+        <!-- KHONG launch khi nav==false vi khong co Nav2 → khong co action server -->
+        <group if="$(var explore)">
+            <node pkg="explore_lite" exec="explore" name="explore_node" output="screen">
+                <param from="$(var explore_params_path)"/>
             </node>
         </group>
     </group>

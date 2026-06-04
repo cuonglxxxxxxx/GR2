@@ -1,0 +1,37 @@
+/**:
+  ros__parameters:
+    use_sim_time: false
+    # Khung tham chieu — khop voi base_footprint trong toan he thong v4
+    robot_base_frame: base_footprint
+
+    # Subscribe global costmap cua Nav2 (KHONG dung /map cua RTAB-Map truc tiep
+    # vi explore can costmap_updates topic, Nav2 costmap publish day du)
+    costmap_topic: /global_costmap/costmap
+    costmap_updates_topic: /global_costmap/costmap_updates
+
+    # Sau khi xong, robot ve diem khoi tao (huu ich de close map loop)
+    return_to_init: true
+
+    # Visualize frontier markers tren RViz
+    visualize: true
+
+    # Tan so chon frontier moi — 0.15Hz = chon goal moi moi ~6.7s
+    # Du cham de Nav2 di toi noi truoc khi bi override
+    planner_frequency: 0.15
+
+    # Neu robot khong tien thay (Nav2 bi stuck) sau timeout, blacklist frontier nay
+    progress_timeout: 30.0
+
+    # Trong so chon frontier:
+    #  - potential_scale: cao = uu tien frontier GAN (giam phai di xa qua Kinect range)
+    #  - gain_scale: cao = uu tien frontier LON (nhieu info gain)
+    #  - orientation_scale: 0 = khong quan tam huong (robot tu xoay khi den noi)
+    potential_scale: 3.0
+    orientation_scale: 0.0
+    gain_scale: 1.0
+
+    transform_tolerance: 1.0   # khop voi nav2_params (1.0)
+
+    # Min frontier size — Kinect FOV hep (~58 deg) + range 3.5m
+    # Frontier qua nho (<0.5m) co the la noise depth, khong dang follow
+    min_frontier_size: 0.5
