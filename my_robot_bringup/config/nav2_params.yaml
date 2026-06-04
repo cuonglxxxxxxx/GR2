@@ -158,7 +158,11 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.30
+        # Tu 0.30 → 0.20 sau log 04062250: explore "No frontiers" som vi
+        # inflation che frontier sat tuong → explore coi la unreachable.
+        # Robot half-width ~0.14m, 0.20m buffer du an toan.
+        # Chi giam o global_costmap (local van 0.30 de controller ne CK an toan)
+        inflation_radius: 0.20
 
       always_send_full_costmap: true
 

@@ -33,5 +33,6 @@
     transform_tolerance: 1.0   # khop voi nav2_params (1.0)
 
     # Min frontier size — Kinect FOV hep (~58 deg) + range 3.5m
-    # Frontier qua nho (<0.5m) co the la noise depth, khong dang follow
-    min_frontier_size: 0.5
+    # Tu 0.5 → 0.3 sau log 04062250: explore dung som vi frontier nho bi loc
+    # 0.3m van loc duoc noise depth (~1-2 cells @ 0.05m/pix la noise)
+    min_frontier_size: 0.3
