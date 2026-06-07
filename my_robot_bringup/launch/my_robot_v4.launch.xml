@@ -27,10 +27,6 @@
             <param name="use_sim_time" value="false"/>
         </node>
 
-        <node pkg="normalized_cmd" exec="normalized_cmd" name="cmd_vel_normalizer" output="screen">
-            <param name="use_sim_time" value="false"/>
-        </node>
-
         <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
             <param name="use_sim_time" value="false"/>
         </node>
@@ -136,9 +132,9 @@
         </group>
 
         <!-- ===== NAV2 STACK (nav==true) — chay cung pure_localization ===== -->
-        <!-- Khong dung navigation_launch.py mac dinh vi: -->
-        <!-- 1. No remap cmd_vel -> cmd_vel_nav (pha flow normalized_cmd cua ta) -->
-        <!-- 2. No include 10 lifecycle nodes (route, collision_monitor, docking...) - khong can -->
+        <!-- Khong dung navigation_launch.py mac dinh vi no include 10 lifecycle nodes -->
+        <!-- (route, collision_monitor, docking...) khong can cho he thong nay. -->
+        <!-- /cmd_vel publish thang xuong ESP32 (ESP32 tu clamp + watchdog 500ms). -->
         <group if="$(var nav)">
             <node pkg="nav2_controller" exec="controller_server" name="controller_server" output="screen">
                 <param from="$(var nav2_params_path)"/>
