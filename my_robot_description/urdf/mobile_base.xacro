@@ -14,7 +14,7 @@
       <geometry>
         <box size="${base_length} ${base_width} ${base_height}" />
       </geometry>
-      <origin xyz="-0.105 0 0.0775" rpy="0 0 0" />
+      <origin xyz="-0.0675 0 0.0775" rpy="0 0 0" />
       <material name="semi_black">
         <color rgba="0 0 0 0.75" />
       </material>
@@ -56,7 +56,7 @@
       <geometry>
         <sphere radius="0.03" />
       </geometry>
-      <origin xyz="-0.21 0 0.03" rpy="0 0 0" />
+      <origin xyz="-0.135 0 0.03" rpy="0 0 0" />
       <material name="gray">
         <color rgba="0.5 0.5 0.5 1.0" />
       </material>
@@ -112,7 +112,8 @@
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
     <child link="imu_link"/>
-    <origin xyz="-0.105 0 0.0775" rpy="0 0 0"/>
+    <origin xyz="-0.045 0.03 0.0775" rpy="0 0 0"/>
   </joint>
 
 </robot>
+

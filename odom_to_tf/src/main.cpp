@@ -4,7 +4,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 
@@ -24,14 +23,6 @@ public:
         last_odom_msg_ = msg;
         has_data_ = true;
       });
-
-    imu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>(
-      "/imu/data", 10, [this](const sensor_msgs::msg::Imu::SharedPtr msg) {
-        last_imu_msg_ = msg;
-      });
-
-    // Publisher cho dữ liệu sạch để RViz dùng (Re-stamped)
-    synced_imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu/data_synced", 10);
 
     // TIMER CỐ ĐỊNH 50HZ: Đảm bảo TF tree không bao giờ bị đứt gãy dù WiFi lag
     timer_ = this->create_wall_timer(20ms, std::bind(&OdomSimpleBridge::publishTf, this));
@@ -60,23 +51,13 @@ private:
       t.transform.rotation.w = 1.0;  // identity — chờ /odom đầu tiên
     }
     tf_broadcaster_->sendTransform(t);
-
-    // 2. Re-stamp IMU để RViz hiển thị mượt mà
-    if (last_imu_msg_) {
-        sensor_msgs::msg::Imu synced_imu = *last_imu_msg_;
-        synced_imu.header.stamp = now;
-        synced_imu_pub_->publish(synced_imu);
-    }
   }
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr synced_imu_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
   nav_msgs::msg::Odometry::SharedPtr last_odom_msg_;
-  sensor_msgs::msg::Imu::SharedPtr last_imu_msg_;
   bool has_data_ = false;
 };
 
