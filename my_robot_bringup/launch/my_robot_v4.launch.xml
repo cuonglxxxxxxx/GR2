@@ -41,6 +41,10 @@
 
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
               args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
+        <node pkg="topic_tools" exec="throttle" name="rgb_throttle" output="screen"
+              args="messages /kinect/image_raw 10.0 /kinect/image_throttled"/>
+        <node pkg="topic_tools" exec="throttle" name="info_throttle" output="screen"
+              args="messages /kinect/camera_info 10.0 /kinect/camera_info_throttled"/>
 
         <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
             <remap from="depth" to="/kinect/depth/image_throttled"/>
@@ -69,10 +73,12 @@
                 <param name="Vis/MinInliers" value="20" type="str"/>
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
-                <remap from="rgb/image" to="/kinect/image_raw"/>
-                <remap from="rgb/camera_info" to="/kinect/camera_info"/>
-                <remap from="depth/image" to="/kinect/depth/image_raw"/>
-                <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
+                <param name="sync_queue_size" value="20"/>
+                <param name="topic_queue_size" value="20"/>
+                <remap from="rgb/image" to="/kinect/image_throttled"/>
+                <remap from="rgb/camera_info" to="/kinect/camera_info_throttled"/>
+                <remap from="depth/image" to="/kinect/depth/image_throttled"/>
+                <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
                 <remap from="scan" to="/scan"/>
                 <remap from="odom" to="/odom"/>
             </node>
@@ -97,10 +103,12 @@
                 <param name="Vis/MinInliers" value="20" type="str"/>
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
-                <remap from="rgb/image" to="/kinect/image_raw"/>
-                <remap from="rgb/camera_info" to="/kinect/camera_info"/>
-                <remap from="depth/image" to="/kinect/depth/image_raw"/>
-                <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
+                <param name="sync_queue_size" value="20"/>
+                <param name="topic_queue_size" value="20"/>
+                <remap from="rgb/image" to="/kinect/image_throttled"/>
+                <remap from="rgb/camera_info" to="/kinect/camera_info_throttled"/>
+                <remap from="depth/image" to="/kinect/depth/image_throttled"/>
+                <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
                 <remap from="scan" to="/scan"/>
                 <remap from="odom" to="/odom"/>
             </node>
@@ -125,10 +133,12 @@
                 <param name="Vis/MinInliers" value="20" type="str"/>
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
-                <remap from="rgb/image" to="/kinect/image_raw"/>
-                <remap from="rgb/camera_info" to="/kinect/camera_info"/>
-                <remap from="depth/image" to="/kinect/depth/image_raw"/>
-                <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
+                <param name="sync_queue_size" value="20"/>
+                <param name="topic_queue_size" value="20"/>
+                <remap from="rgb/image" to="/kinect/image_throttled"/>
+                <remap from="rgb/camera_info" to="/kinect/camera_info_throttled"/>
+                <remap from="depth/image" to="/kinect/depth/image_throttled"/>
+                <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
                 <remap from="scan" to="/scan"/>
                 <remap from="odom" to="/odom"/>
             </node>
