@@ -27,7 +27,7 @@ controller_server:
     # Angular: stiction 1.5 rad/s la nguong quay tuc thi
     min_x_velocity_threshold: 0.06
     min_y_velocity_threshold: 0.5
-    min_theta_velocity_threshold: 0.1
+    min_theta_velocity_threshold: 0.02
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
     goal_checker_plugins: ["general_goal_checker"]
@@ -43,7 +43,7 @@ controller_server:
     general_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.08      # ~8cm, that chat hon nhieu so voi 25cm cu
-      yaw_goal_tolerance: 0.10     # ~5.7 deg
+      yaw_goal_tolerance: 0.035    # ~2.0 deg
       stateful: False              # True ghi nho "tung dat tolerance" → succeed khi yaw da quay qua. False = robot phai DUNG trong tolerance
 
     FollowPath:
@@ -59,7 +59,7 @@ controller_server:
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
       # Rotation — giam them de moi cycle 50ms (controller 20Hz) chi quay 0.02 rad = 1.15 deg, cho phep dung dung tolerance
-      rotate_to_heading_angular_vel: 0.4
+      rotate_to_heading_angular_vel: 0.25
       max_angular_accel: 6.0
       use_rotate_to_heading: true            # BAT lai: can de align yaw cuoi tai goal (smoother cap angular da nang len 2.0 du ramp qua stiction)
       rotate_to_heading_min_angle: 0.6      # ~34 deg — chi rotate-only khi heading lech nhieu, tranh kich hoat giua duong
