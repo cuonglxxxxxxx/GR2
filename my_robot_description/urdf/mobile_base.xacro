@@ -83,7 +83,7 @@
   </joint>
 
   <!-- Kinect Optical Frame (Z forward, X right, Y down) -->
-  <!-- Microsoft Kinect v1 offsets: RGB camera is 1.25cm right of center base (-0.0125 in Y) -->
+  <!-- Microsoft Kinect v1 offsets - RGB camera is 1.25cm right of center base (-0.0125 in Y) -->
   <link name="kinect_depth"/>
   <joint name="kinect_depth_joint" type="fixed">
     <parent link="kinect_link"/>
