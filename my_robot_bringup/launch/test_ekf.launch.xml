@@ -1,11 +1,16 @@
 <launch>
     <let name="ekf_params_path" value="$(find-pkg-share my_robot_bringup)/config/ekf.yaml"/>
+    <let name="madgwick_params_path" value="$(find-pkg-share my_robot_bringup)/config/madgwick.yaml"/>
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro"/>
 
     <node pkg="robot_state_publisher" exec="robot_state_publisher">
         <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
         <param name="publish_frequency" value="50.0"/>
         <param name="use_sim_time" value="false"/>
+    </node>
+
+    <node pkg="imu_filter_madgwick" exec="imu_filter_madgwick_node" name="imu_filter_madgwick" output="screen">
+        <param from="$(var madgwick_params_path)"/>
     </node>
 
     <node pkg="robot_localization" exec="ekf_node" name="ekf_filter_node" output="screen">
