@@ -1,0 +1,72 @@
+# EKF config cho robot_localization
+# Reference: Moore & Stouch (2014) "A Generalized Extended Kalman Filter
+#            Implementation for the Robot Operating System" — IAS-13
+# Doc: https://docs.ros.org/en/jazzy/p/robot_localization/
+#
+# Pattern: VELOCITY FUSION (khong fuse pose absolute → khong drift)
+#   - Odom (encoder ESP32):  dung vx           (encoder do tot velocity tuyen tinh)
+#   - IMU (MPU9250 ESP32):   dung vyaw         (gyro do tot yaw rate, EKF tu uoc luong bias)
+#   - EKF tich phan vx + vyaw → x, y, yaw  → publish /odometry/filtered + TF odom→base_footprint
+
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: false
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true          # robot vi sai 2D — khoa z/roll/pitch
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+    print_diagnostics: true
+    debug: false
+
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint   # khop voi URDF root + odom_msg.child_frame_id
+    world_frame: odom                 # filter chay trong odom frame (khong fuse map)
+
+    # ===== Odometry encoder-only tu ESP32 =====
+    # Order: x, y, z, roll, pitch, yaw,  vx, vy, vz, vroll, vpitch, vyaw,  ax, ay, az
+    odom0: /odom
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  false, false,
+                   false, false, false,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_differential: false
+    odom0_relative: false
+    odom0_nodelay: false
+
+    # ===== IMU raw tu MPU9250 (ESP32) =====
+    # Chi fuse vyaw (gyro_z) — accel KHONG dung vi noise integrate sang vx sai
+    # Orientation cov[0]=-1 trong firmware → EKF tu dong bo qua
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+    imu0_queue_size: 10
+    imu0_differential: false
+    imu0_relative: false
+    imu0_nodelay: false
+    imu0_remove_gravitational_acceleration: false
+
+    # ===== Process noise (15x15 diag) — default robot_localization =====
+    # Tang vyaw process noise (index 11) de filter de duoi bias gyro drift
+    process_noise_covariance: [0.05, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0.05, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0.06, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0.03, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0.03, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0.06, 0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0.025, 0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0.025, 0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0.04, 0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0.01, 0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0.01, 0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.02, 0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0.01, 0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0.01, 0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.015]

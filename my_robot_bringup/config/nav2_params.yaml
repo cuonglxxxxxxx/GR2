@@ -8,7 +8,7 @@ bt_navigator:
     use_sim_time: false
     global_frame: map
     robot_base_frame: base_footprint
-    odom_topic: /odom
+    odom_topic: /odometry/filtered
     bt_loop_duration: 10
     default_server_timeout: 1000
     wait_for_service_timeout: 1000
@@ -224,7 +224,7 @@ velocity_smoother:
     min_velocity: [-0.1, 0.0, -2.0]
     max_accel: [0.6, 0.0, 3.0]          # angular accel cao hon de ramp nhanh qua stiction
     max_decel: [-0.6, 0.0, -3.0]
-    odom_topic: "odom"
+    odom_topic: "odometry/filtered"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0

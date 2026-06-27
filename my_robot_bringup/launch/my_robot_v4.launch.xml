@@ -12,6 +12,7 @@
     <let name="db_path" value="/home/cuong/.ros/rtabmap_$(var map_name).db" />
     <let name="nav2_params_path" value="$(find-pkg-share my_robot_bringup)/config/nav2_params.yaml" />
     <let name="explore_params_path" value="$(find-pkg-share my_robot_bringup)/config/explore_params.yaml" />
+    <let name="ekf_params_path" value="$(find-pkg-share my_robot_bringup)/config/ekf.yaml" />
 
     <!-- ===== DESKTOP MODE: RViz only ===== -->
     <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
@@ -27,8 +28,12 @@
             <param name="use_sim_time" value="false"/>
         </node>
 
-        <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
-            <param name="use_sim_time" value="false"/>
+        <!-- ===== EKF fusion encoder + IMU (robot_localization) =====
+             Subscribe /odom (encoder ESP32) + /imu/data (raw MPU9250)
+             Publish /odometry/filtered + TF odom→base_footprint @30Hz
+             Reference: Moore & Stouch 2014 — IAS-13 -->
+        <node pkg="robot_localization" exec="ekf_node" name="ekf_filter_node" output="screen">
+            <param from="$(var ekf_params_path)"/>
         </node>
 
         <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
@@ -83,7 +88,7 @@
                 <remap from="depth/image" to="/kinect/depth/image_throttled"/>
                 <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
                 <remap from="scan" to="/scan"/>
-                <remap from="odom" to="/odom"/>
+                <remap from="odom" to="/odometry/filtered"/>
             </node>
         </group>
 
@@ -116,7 +121,7 @@
                 <remap from="depth/image" to="/kinect/depth/image_throttled"/>
                 <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
                 <remap from="scan" to="/scan"/>
-                <remap from="odom" to="/odom"/>
+                <remap from="odom" to="/odometry/filtered"/>
             </node>
         </group>
 
@@ -149,7 +154,7 @@
                 <remap from="depth/image" to="/kinect/depth/image_throttled"/>
                 <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
                 <remap from="scan" to="/scan"/>
-                <remap from="odom" to="/odom"/>
+                <remap from="odom" to="/odometry/filtered"/>
             </node>
         </group>
 

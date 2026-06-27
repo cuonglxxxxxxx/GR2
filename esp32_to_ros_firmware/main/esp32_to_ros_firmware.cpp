@@ -83,7 +83,6 @@ sensor_msgs__msg__Imu imu_msg;
 rcl_publisher_t odom_publisher, imu_publisher;
 volatile float rpm_ref_L = 0, rpm_ref_R = 0, w_L_ref = 0, w_R_ref = 0;
 volatile float rpm_L = 0, rpm_R = 0;
-static float gz_for_odom = 0.0f;
 
 void setupPins() {
     // 1. Configure PWM
@@ -204,55 +203,14 @@ void timer_callback_ctrl(rcl_timer_t *timer, int64_t last_call_time) {
 
     rpm_L = encoderL.getRPM(dt);
     rpm_R = encoderR.getRPM(dt);
-    
+
     imu.update();
     pose_est.update(rpm_L, rpm_R);
 
-    // Bias estimation 2 nguon:
-    // (1) ZUPT khi cmd=0 va dung im — fast accurate
-    // (2) Straight-line: khi encoder bao yaw_rate ~0 (di thang) — cho phep correct bias trong mapping continuous
-    static float gz_bias_rt = 0.0f;
-    static bool bias_initialized = false;
-    static int still_n = 0;
-    static float still_sum = 0.0f;
-
-    // ZUPT condition phai dung RPM measured (encoder thuc), KHONG dung w_ref (command):
-    // w_ref oscillate qua 0 khi Nav2 lac → false trigger; cmd nho duoi stiction → miss trigger
-    bool is_still = (fabsf(rpm_L) < 0.3f && fabsf(rpm_R) < 0.3f);
-
-    // wheel yaw rate (encoder-derived) — dung cho ca straight-line check va encoder-priority theta
-    float w_L_actual = rpm_L * (2.0f * M_PI / 60.0f);
-    float w_R_actual = rpm_R * (2.0f * M_PI / 60.0f);
-    float wheel_yaw_rate = WHEEL_RADIUS * (w_R_actual - w_L_actual) / WHEEL_SEPARATION;
-
-    if (is_still) {
-        gz_for_odom = 0.0f;
-        still_sum += imu.getGyroZ();
-        if (++still_n >= 10) {           // 0.2s — du nhanh cho pause teleop
-            float measured = still_sum / 10.0f;
-            if (!bias_initialized) {
-                gz_bias_rt = measured;
-                bias_initialized = true;
-            } else {
-                gz_bias_rt = 0.7f * gz_bias_rt + 0.3f * measured;   // EMA fast
-            }
-            still_n = 0; still_sum = 0.0f;
-        }
-    } else {
-        still_n = 0; still_sum = 0.0f;
-        if (fabsf(wheel_yaw_rate) < 0.05f) {              // <2.9 deg/s → robot di gan nhu thang
-            // EMA slow van update de bias luon fresh, dung cho khi quay
-            gz_bias_rt = 0.995f * gz_bias_rt + 0.005f * imu.getGyroZ();
-            bias_initialized = true;
-            // Encoder-priority cho theta: indoor khong truot ngang, encoder dang tin cay hon
-            // gyro residual (calib boot ~0.01 rad/s, EMA can ~4s converge — du de drift 5-10° trong 1m)
-            gz_for_odom = wheel_yaw_rate;
-        } else {
-            // Robot dang quay that su → tin gyro (da tru bias rt)
-            gz_for_odom = imu.getGyroZ() - gz_bias_rt;
-        }
-    }
-    odom.update(pose_est.getLinearVelocity(), gz_for_odom, dt);
+    // Encoder-only odometry. Fusion gyro_z + wheel velocity → theta robust
+    // lam tren Pi bang robot_localization EKF (Moore & Stouch 2014).
+    // ESP32 chi publish raw: /odom (encoder-only) + /imu/data (raw MPU9250).
+    odom.update(pose_est.getLinearVelocity(), pose_est.getAngularVelocity(), dt);
 
     const float EPS_THRESHOLD = 0.01f;
     static float prev_w_L_ref = 0.0f, prev_w_R_ref = 0.0f;
@@ -298,7 +256,7 @@ void timer_callback_odom(rcl_timer_t *timer, int64_t last_call_time) {
     odom_msg.pose.pose.orientation.z = sinf(theta / 2.0f);
     odom_msg.pose.pose.orientation.w = cosf(theta / 2.0f);
     odom_msg.twist.twist.linear.x = pose_est.getLinearVelocity();
-    odom_msg.twist.twist.angular.z = gz_for_odom;
+    odom_msg.twist.twist.angular.z = pose_est.getAngularVelocity();
     RCSOFTCHECK(rcl_publish(&odom_publisher, &odom_msg, NULL));
 
     // IMU message
