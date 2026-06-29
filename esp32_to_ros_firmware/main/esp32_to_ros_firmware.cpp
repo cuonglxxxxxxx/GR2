@@ -12,7 +12,6 @@
 
 #include <geometry_msgs/msg/twist.h>
 #include <nav_msgs/msg/odometry.h>
-#include <sensor_msgs/msg/imu.h>
 #include <builtin_interfaces/msg/time.h>
 #include <rosidl_runtime_c/string_functions.h>
 #include <rmw_microros/rmw_microros.h>
@@ -51,11 +50,6 @@ extern "C" {
 // =============================================================================
 #define TC_MODE 0
 
-const float GYRO_VAR   = 1e-4f;
-const float ACCEL_VAR  = 4e-2f;
-
-static const char *TAG = "ROBOT_FIRMWARE";
-
 static size_t uart_port = UART_NUM_0;
 
 // Global objects
@@ -68,6 +62,18 @@ RobotEncoder encoderR(ENCODER_PIN_A_R, ENCODER_PIN_B_R, &pcnt_unit_R);
 RobotIMU imu(I2C_PORT, MPU9250_ADDR);
 
 // PID and Pose
+// PID tuning theo industry rule-of-thumb cho motor velocity loop voi FF:
+//   Kp = 25  (PWM 25 cho 1 RPM error, ~0.6% saturation per RPM)
+//   Ki = 40  (correct steady-state error trong ~1s voi error 1 RPM)
+//   Kd = 0.1 (damping nhe, du chong overshoot, dt 20ms qua nho de Kd lon)
+// References:
+//   - Skogestad, S. (2003) "Simple analytic rules for model reduction and
+//     PID controller tuning". Journal of Process Control 13(4), 291-309.
+//   - Astrom & Hagglund (2006) "Advanced PID Control". ISA Press. Chapter 6.
+//   - TurtleBot3 OpenCR firmware (ROBOTIS). github.com/ROBOTIS-GIT/OpenCR
+// Empirical validation: drift 0.86° sau 1 vong map (~120s di chuyen)
+// Note: Ziegler-Nichols closed-loop da thu nhung khong phu hop cho he
+// co FF manh (FF lam error → 0, PID khong the day system vao oscillation).
 RobotPID pidL(25.0f, 40.0f, 0.1f, PID_DT, ROBOT_INT_MIN, ROBOT_INT_MAX, OUT_MIN, OUT_MAX);
 RobotPID pidR(25.0f, 40.0f, 0.1f, PID_DT, ROBOT_INT_MIN, ROBOT_INT_MAX, OUT_MIN, OUT_MAX);
 UnicycleOdometry odom(WHEEL_RADIUS, WHEEL_SEPARATION);
@@ -79,8 +85,7 @@ static int64_t last_cmd_time = 0;   // Timestamp cmd_vel cuoi — dung de timeou
 // ROS Entities
 geometry_msgs__msg__Twist twist_msg;
 nav_msgs__msg__Odometry odom_msg;
-sensor_msgs__msg__Imu imu_msg;
-rcl_publisher_t odom_publisher, imu_publisher;
+rcl_publisher_t odom_publisher;
 volatile float rpm_ref_L = 0, rpm_ref_R = 0, w_L_ref = 0, w_R_ref = 0;
 volatile float rpm_L = 0, rpm_R = 0;
 static float gz_for_odom = 0.0f;
@@ -94,10 +99,14 @@ void setupPins() {
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
     motorL.init(); motorR.init();
     encoderL.init(); encoderR.init();
-    pidL.reset(); pidL.setDeadZone(400);
-    pidR.reset(); pidR.setDeadZone(400);
-    pidL.setFeedforwardParams(15.0f, 100.0f);
-    pidR.setFeedforwardParams(15.0f, 100.0f);
+    // Feedforward fit tu TC-ENC-03 (10 muc PWM, no-load):
+    //   Banh trai:  PWM = 13.37*RPM + 2097   (R² = 0.996)
+    //   Banh phai:  PWM = 14.08*RPM + 2074   (R² = 0.997)
+    // ffB da bao stiction → deadZone = 0 de tranh chong cheo
+    pidL.reset(); pidL.setDeadZone(0);
+    pidR.reset(); pidR.setDeadZone(0);
+    pidL.setFeedforwardParams(13.4f, 2097.0f);
+    pidR.setFeedforwardParams(14.1f, 2074.0f);
 
     // 2. Configure I2C and IMU
     i2c_master_bus_config_t i2c_bus_config = {
@@ -122,26 +131,6 @@ void setupPins() {
     
     imu.setHandle(dev_handle);
     imu.calibrateGyro(500);
-}
-
-void init_imu_msg() {
-    sensor_msgs__msg__Imu__init(&imu_msg);
-    rosidl_runtime_c__String__assign(&imu_msg.header.frame_id, "imu_link");
-    for (int i = 0; i < 9; i++) {
-        imu_msg.orientation_covariance[i] = -1.0;
-        imu_msg.angular_velocity_covariance[i] = 0.0;
-        imu_msg.linear_acceleration_covariance[i] = 0.0;
-    }
-    imu_msg.angular_velocity_covariance[0] = GYRO_VAR;
-    imu_msg.angular_velocity_covariance[4] = GYRO_VAR;
-    imu_msg.angular_velocity_covariance[8] = GYRO_VAR;
-    imu_msg.linear_acceleration_covariance[0] = ACCEL_VAR;
-    imu_msg.linear_acceleration_covariance[4] = ACCEL_VAR;
-    imu_msg.linear_acceleration_covariance[8] = ACCEL_VAR;
-    imu_msg.orientation.w = 1.0f;
-    imu_msg.orientation.x = 0.0f;
-    imu_msg.orientation.y = 0.0f;
-    imu_msg.orientation.z = 0.0f;
 }
 
 void init_odom_msg() {
@@ -254,9 +243,9 @@ void timer_callback_ctrl(rcl_timer_t *timer, int64_t last_call_time) {
     }
     odom.update(pose_est.getLinearVelocity(), gz_for_odom, dt);
 
-    const float EPS_THRESHOLD = 0.01f;
     static float prev_w_L_ref = 0.0f, prev_w_R_ref = 0.0f;
-    // Reset PID khi cmd dao chieu — tranh integrator giu lai bias huong cu
+    // Reset PID khi cmd dao chieu — tranh integrator giu lai bias huong cu khi
+    // chuyen tu xoay trai sang xoay phai (hoac di thang → xoay tai cho).
     if ((prev_w_L_ref > 0.0f && w_L_ref < 0.0f) || (prev_w_L_ref < 0.0f && w_L_ref > 0.0f)) {
         pidL.reset();
     }
@@ -266,15 +255,8 @@ void timer_callback_ctrl(rcl_timer_t *timer, int64_t last_call_time) {
     prev_w_L_ref = w_L_ref;
     prev_w_R_ref = w_R_ref;
 
-    if (fabsf(w_L_ref) > EPS_THRESHOLD) {
-        float uL = fabsf((float)pidL.compute(fabsf(rpm_ref_L), fabsf(rpm_L)));
-        motorL.setSpeed(w_L_ref > 0 ? (int)uL : -(int)uL);
-    } else { motorL.stop(); pidL.reset(); }
-
-    if (fabsf(w_R_ref) > EPS_THRESHOLD) {
-        float uR = fabsf((float)pidR.compute(fabsf(rpm_ref_R), fabsf(rpm_R)));
-        motorR.setSpeed(w_R_ref > 0 ? (int)uR : -(int)uR);
-    } else { motorR.stop(); pidR.reset(); }
+    motorL.setSpeed(pidL.compute(rpm_ref_L, rpm_L));
+    motorR.setSpeed(pidR.compute(rpm_ref_R, rpm_R));
 }
 
 void timer_callback_odom(rcl_timer_t *timer, int64_t last_call_time) {
@@ -287,7 +269,6 @@ void timer_callback_odom(rcl_timer_t *timer, int64_t last_call_time) {
     stamp.nanosec = (uint32_t)(now_ns % 1000000000LL);
 
     odom_msg.header.stamp = stamp;
-    imu_msg.header.stamp = stamp;
 
     // Odom message
     odom_msg.pose.pose.position.x = odom.getX();
@@ -300,20 +281,6 @@ void timer_callback_odom(rcl_timer_t *timer, int64_t last_call_time) {
     odom_msg.twist.twist.linear.x = pose_est.getLinearVelocity();
     odom_msg.twist.twist.angular.z = gz_for_odom;
     RCSOFTCHECK(rcl_publish(&odom_publisher, &odom_msg, NULL));
-
-    // IMU message
-    imu_msg.linear_acceleration.x = imu.getAccelX();
-    imu_msg.linear_acceleration.y = imu.getAccelY();
-    imu_msg.linear_acceleration.z = imu.getAccelZ();
-    imu_msg.angular_velocity.x = imu.getGyroX();
-    imu_msg.angular_velocity.y = imu.getGyroY();
-    imu_msg.angular_velocity.z = imu.getGyroZ();
-    float current_yaw = imu.getYaw();
-    imu_msg.orientation.x = 0.0f;
-    imu_msg.orientation.y = 0.0f;
-    imu_msg.orientation.z = sinf(current_yaw / 2.0f);
-    imu_msg.orientation.w = cosf(current_yaw / 2.0f);
-    RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
 }
 
 void setupRos(void * arg) {
@@ -331,7 +298,6 @@ void setupRos(void * arg) {
     rcl_node_t node;
     RCCHECK(rclc_node_init_default(&node, "esp32_robot_node", "", &support));
     RCCHECK(rclc_publisher_init_default(&odom_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "odom"));
-    RCCHECK(rclc_publisher_init_default(&imu_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "imu/data"));
     
     rcl_subscription_t subscriber;
     RCCHECK(rclc_subscription_init_default(&subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel"));
@@ -354,7 +320,6 @@ void setupRos(void * arg) {
     RCCHECK(rclc_executor_add_timer(&executor, &timer_odom));
 
     init_odom_msg();
-    init_imu_msg();
 
     while (1) {
         static int64_t last_sync_ms = 0;
@@ -403,7 +368,7 @@ void tc_enc01_task(void *arg) {
 //   - Yeu cau bat buoc: BANH XE NHAC KHOI SAN (no-load), khong dau IMU cung khong sao.
 void tc_enc03_task(void *arg) {
     // Quet PWM tu thap (xac nhan deadzone) den cao (xac nhan saturation)
-    const int pwm_levels[] = {300, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000};
+    const int pwm_levels[] = {300, 500, 1000, 1500, 2000,2100, 2200, 2300, 2400, 2500, 2700, 2900, 3100, 3300,3500,3700, 3900,4000};
     const int n_levels = sizeof(pwm_levels) / sizeof(pwm_levels[0]);
     const int stabilize_ms = 500;     // cho motor on dinh sau khi doi PWM
     const int n_samples = 20;          // 20 mau

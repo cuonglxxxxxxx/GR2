@@ -6,7 +6,7 @@ RobotPID::RobotPID(float Kp, float Ki, float Kd, float dt,
                    float integratorMin, float integratorMax,
                    int outputMin, int outputMax)
     : _Kp(Kp), _Ki(Ki), _Kd(Kd), _dt(dt),
-      _integrator(0), _prevMeas(0), _dFiltered(0),
+      _integrator(0), _prevMeas(0),
       _intMin(integratorMin), _intMax(integratorMax),
       _outMin(outputMin), _outMax(outputMax) {}
 
@@ -24,7 +24,11 @@ int RobotPID::compute(float setpoint, float measurement) {
     _integrator = constrain(I_temp, _intMin, _intMax);
 
     float pid_control = P + _integrator + D;
-    float ff_control = _useFeedforward ? (_ffA * setpoint + _ffB) : 0.0f;
+
+    // Feedforward symmetric: ff = ffA*setpoint + sign(setpoint)*ffB
+    float ff_control = _ffA * setpoint;
+    if (setpoint > 0.0f) ff_control += _ffB;
+    else if (setpoint < 0.0f) ff_control -= _ffB;
 
     int raw = (int)round(pid_control + ff_control);
 

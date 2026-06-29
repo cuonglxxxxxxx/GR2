@@ -26,13 +26,13 @@ public:
 
 private:
     float _Kp, _Ki, _Kd, _dt;
-    float _integrator, _prevMeas, _dFiltered;
+    float _integrator, _prevMeas;
+    float _dFiltered = 0.0f;
     float _dFilterAlpha = 0.1f;
     float _intMin, _intMax;
     int _outMin, _outMax;
-    int _deadZone = 2000;
-    float _ffA = 0.077f, _ffB = -85.62f;
-    bool _useFeedforward = true;
+    int _deadZone = 0;
+    float _ffA = 0.0f, _ffB = 0.0f;
 };
 
 // --- MotorDriver Class Ported from Arduino ---
