@@ -35,8 +35,8 @@ controller_server:
       stateful: False
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.08
-      min_approach_linear_velocity: 0.08
+      desired_linear_vel: 0.07
+      min_approach_linear_velocity: 0.05
       approach_velocity_scaling_dist: 0.25
       lookahead_dist: 0.25
       min_lookahead_dist: 0.18
@@ -44,7 +44,7 @@ controller_server:
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
       rotate_to_heading_angular_vel: 0.25
-      max_angular_accel: 2.5
+      max_angular_accel: 1.0
       use_rotate_to_heading: true
       rotate_to_heading_min_angle: 0.6
       allow_reversing: false
@@ -173,19 +173,19 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 1.0
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.5
-    min_rotational_vel: 0.3
-    rotational_acc_lim: 2.5
+    max_rotational_vel: 0.35
+    min_rotational_vel: 0.2
+    rotational_acc_lim: 1.0
 velocity_smoother:
   ros__parameters:
     use_sim_time: false
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.10, 0.0, 1.0]
-    min_velocity: [-0.08, 0.0, -1.0]
-    max_accel: [0.3, 0.0, 1.5]
-    max_decel: [-0.3, 0.0, -1.5]
+    max_velocity: [0.08, 0.0, 0.4]
+    min_velocity: [-0.06, 0.0, -0.4]
+    max_accel: [0.2, 0.0, 0.6]
+    max_decel: [-0.2, 0.0, -0.6]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
