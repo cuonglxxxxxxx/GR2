@@ -5,47 +5,36 @@
     <arg name="localization" default="false" />
     <arg name="nav" default="false" />
     <arg name="explore" default="false" />
-
     <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
     <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz" />
-    <!-- Dung duong dan mac dinh .ros de dam bao quyen ghi -->
     <let name="db_path" value="/home/cuong/.ros/rtabmap_$(var map_name).db" />
     <let name="nav2_params_path" value="$(find-pkg-share my_robot_bringup)/config/nav2_params.yaml" />
     <let name="explore_params_path" value="$(find-pkg-share my_robot_bringup)/config/explore_params.yaml" />
-
-    <!-- ===== DESKTOP MODE: RViz only ===== -->
     <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
         <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen"
               args="-d $(var rviz_config_path)" if="$(var rviz)"/>
     </group>
-
-    <!-- ===== RASPBERRY PI MODE: Sensors + RTAB-Map ===== -->
     <group if="$(eval '\'$(var mode)\' == \'raspberry\'')">
         <node pkg="robot_state_publisher" exec="robot_state_publisher">
             <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
             <param name="publish_frequency" value="50.0"/>
             <param name="use_sim_time" value="false"/>
         </node>
-
         <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
             <param name="use_sim_time" value="false"/>
         </node>
-
         <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
             <param name="source_list" value="['/joint_states']"/>
             <param name="rate" value="50"/>
             <param name="use_sim_time" value="false"/>
         </node>
-
         <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen"/>
-
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
               args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
         <node pkg="topic_tools" exec="throttle" name="rgb_throttle" output="screen"
               args="messages /kinect/image_raw 10.0 /kinect/image_throttled"/>
         <node pkg="topic_tools" exec="throttle" name="info_throttle" output="screen"
               args="messages /kinect/camera_info 10.0 /kinect/camera_info_throttled"/>
-
         <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
             <remap from="depth" to="/kinect/depth/image_throttled"/>
             <remap from="depth_camera_info" to="/kinect/depth/camera_info"/>
@@ -54,8 +43,6 @@
             <param name="scan_height" value="10"/>
             <param name="output_frame" value="kinect_link"/>
         </node>
-
-        <!-- RTAB-Map Mapping Mode (localization == false) -->
         <group if="$(eval '\'$(var localization)\' == \'false\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen" args="--delete_db_on_start">
                 <param name="database_path" value="$(var db_path)"/>
@@ -86,8 +73,6 @@
                 <remap from="odom" to="/odom"/>
             </node>
         </group>
-
-        <!-- RTAB-Map Resume Mapping Mode (localization == true) -->
         <group if="$(eval '\'$(var localization)\' == \'true\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen">
                 <param name="database_path" value="$(var db_path)"/>
@@ -119,8 +104,6 @@
                 <remap from="odom" to="/odom"/>
             </node>
         </group>
-
-        <!-- RTAB-Map Pure Localization Mode (localization == pure_localization) -->
         <group if="$(eval '\'$(var localization)\' == \'pure_localization\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen">
                 <param name="database_path" value="$(var db_path)"/>
@@ -152,11 +135,6 @@
                 <remap from="odom" to="/odom"/>
             </node>
         </group>
-
-        <!-- ===== NAV2 STACK (nav==true) — chay cung pure_localization ===== -->
-        <!-- Khong dung navigation_launch.py mac dinh vi no include 10 lifecycle nodes -->
-        <!-- (route, collision_monitor, docking...) khong can cho he thong nay. -->
-        <!-- /cmd_vel publish thang xuong ESP32 (ESP32 tu clamp + watchdog 500ms). -->
         <group if="$(var nav)">
             <node pkg="nav2_controller" exec="controller_server" name="controller_server" output="screen">
                 <param from="$(var nav2_params_path)"/>
@@ -185,10 +163,6 @@
                 <param name="use_sim_time" value="false"/>
             </node>
         </group>
-
-        <!-- ===== FRONTIER EXPLORATION (explore==true) — yeu cau nav==true ===== -->
-        <!-- explore_lite tu chon frontier, goi action navigate_to_pose cua bt_navigator -->
-        <!-- KHONG launch khi nav==false vi khong co Nav2 → khong co action server -->
         <group if="$(var explore)">
             <node pkg="explore_lite" exec="explore" name="explore_node" output="screen">
                 <param from="$(var explore_params_path)"/>

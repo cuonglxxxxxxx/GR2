@@ -17,14 +17,12 @@ public:
   {
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
-    // Subscribe dữ liệu từ robot
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
       "/odom", 10, [this](const nav_msgs::msg::Odometry::SharedPtr msg) {
         last_odom_msg_ = msg;
         has_data_ = true;
       });
 
-    // TIMER CỐ ĐỊNH 50HZ: Đảm bảo TF tree không bao giờ bị đứt gãy dù WiFi lag
     timer_ = this->create_wall_timer(20ms, std::bind(&OdomSimpleBridge::publishTf, this));
 
     RCLCPP_INFO(get_logger(), "OdomSimpleBridge: Fixed 50Hz TF active (Leonardo Logic).");
@@ -35,9 +33,6 @@ private:
   {
     auto now = this->get_clock()->now();
 
-    // 1. Phát TF odom -> base_footprint
-    // Luôn publish ngay từ đầu (kể cả trước khi có /odom) để tránh gap TF
-    // làm slam_toolbox message filter queue bị đầy khi startup
     geometry_msgs::msg::TransformStamped t;
     t.header.stamp = now;
     t.header.frame_id = "odom";
@@ -48,7 +43,7 @@ private:
       t.transform.translation.z = 0.0;
       t.transform.rotation = last_odom_msg_->pose.pose.orientation;
     } else {
-      t.transform.rotation.w = 1.0;  // identity — chờ /odom đầu tiên
+      t.transform.rotation.w = 1.0; 
     }
     tf_broadcaster_->sendTransform(t);
   }
