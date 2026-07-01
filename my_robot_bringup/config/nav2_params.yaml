@@ -44,7 +44,7 @@ controller_server:
       lookahead_time: 1.5
       use_velocity_scaled_lookahead_dist: true
       rotate_to_heading_angular_vel: 0.25
-      max_angular_accel: 6.0
+      max_angular_accel: 2.5
       use_rotate_to_heading: true
       rotate_to_heading_min_angle: 0.6
       allow_reversing: false
@@ -173,19 +173,19 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 1.0
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.8
-    min_rotational_vel: 0.5
-    rotational_acc_lim: 6.0
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.3
+    rotational_acc_lim: 2.5
 velocity_smoother:
   ros__parameters:
     use_sim_time: false
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 2.0]
-    min_velocity: [-0.1, 0.0, -2.0]
-    max_accel: [0.6, 0.0, 3.0]
-    max_decel: [-0.6, 0.0, -3.0]
+    max_velocity: [0.10, 0.0, 1.0]
+    min_velocity: [-0.08, 0.0, -1.0]
+    max_accel: [0.3, 0.0, 1.5]
+    max_decel: [-0.3, 0.0, -1.5]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
