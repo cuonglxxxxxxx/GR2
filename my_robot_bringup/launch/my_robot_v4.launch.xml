@@ -61,7 +61,7 @@
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <param name="Kp/MaxFeatures" value="-1" type="str"/>
-                <param name="Rtabmap/LoopThr" value="1.1" type="str"/>
+                <param name="Rtabmap/LoopThr" value="0.11" type="str"/>
                 <param name="RGBD/ProximityBySpace" value="false" type="str"/>
                 <param name="sync_queue_size" value="20"/>
                 <param name="topic_queue_size" value="20"/>
@@ -92,7 +92,7 @@
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <param name="Kp/MaxFeatures" value="-1" type="str"/>
-                <param name="Rtabmap/LoopThr" value="1.1" type="str"/>
+                <param name="Rtabmap/LoopThr" value="0.11" type="str"/>
                 <param name="RGBD/ProximityBySpace" value="false" type="str"/>
                 <param name="sync_queue_size" value="20"/>
                 <param name="topic_queue_size" value="20"/>
@@ -123,7 +123,7 @@
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <param name="Kp/MaxFeatures" value="-1" type="str"/>
-                <param name="Rtabmap/LoopThr" value="1.1" type="str"/>
+                <param name="Rtabmap/LoopThr" value="0.11" type="str"/>
                 <param name="RGBD/ProximityBySpace" value="false" type="str"/>
                 <param name="sync_queue_size" value="20"/>
                 <param name="topic_queue_size" value="20"/>
