@@ -31,10 +31,6 @@
         <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen"/>
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
               args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
-        <node pkg="topic_tools" exec="throttle" name="rgb_throttle" output="screen"
-              args="messages /kinect/image_raw 10.0 /kinect/image_throttled"/>
-        <node pkg="topic_tools" exec="throttle" name="info_throttle" output="screen"
-              args="messages /kinect/camera_info 10.0 /kinect/camera_info_throttled"/>
         <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
             <remap from="depth" to="/kinect/depth/image_throttled"/>
             <remap from="depth_camera_info" to="/kinect/depth/camera_info"/>
@@ -43,6 +39,7 @@
             <param name="scan_height" value="10"/>
             <param name="output_frame" value="kinect_link"/>
         </node>
+        <!-- RTAB-Map Mapping Mode (localization == false) -->
         <group if="$(eval '\'$(var localization)\' == \'false\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen" args="--delete_db_on_start">
                 <param name="database_path" value="$(var db_path)"/>
@@ -54,25 +51,20 @@
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
                 <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
-                <param name="Reg/Force3DoF" value="true" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
                 <param name="Vis/MinInliers" value="20" type="str"/>
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
-                <param name="Kp/MaxFeatures" value="-1" type="str"/>
-                <param name="Rtabmap/LoopThr" value="0.11" type="str"/>
-                <param name="RGBD/ProximityBySpace" value="false" type="str"/>
-                <param name="sync_queue_size" value="20"/>
-                <param name="topic_queue_size" value="20"/>
-                <remap from="rgb/image" to="/kinect/image_throttled"/>
-                <remap from="rgb/camera_info" to="/kinect/camera_info_throttled"/>
-                <remap from="depth/image" to="/kinect/depth/image_throttled"/>
-                <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
+                <remap from="rgb/image" to="/kinect/image_raw"/>
+                <remap from="rgb/camera_info" to="/kinect/camera_info"/>
+                <remap from="depth/image" to="/kinect/depth/image_raw"/>
+                <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
                 <remap from="scan" to="/scan"/>
                 <remap from="odom" to="/odom"/>
             </node>
         </group>
+        <!-- RTAB-Map Resume Mapping Mode (localization == true) -->
         <group if="$(eval '\'$(var localization)\' == \'true\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen">
                 <param name="database_path" value="$(var db_path)"/>
@@ -85,25 +77,20 @@
                 <param name="use_sim_time" value="false"/>
                 <param name="Mem/IncrementalMemory" value="true" type="str"/>
                 <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
-                <param name="Reg/Force3DoF" value="true" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
                 <param name="Vis/MinInliers" value="20" type="str"/>
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
-                <param name="Kp/MaxFeatures" value="-1" type="str"/>
-                <param name="Rtabmap/LoopThr" value="0.11" type="str"/>
-                <param name="RGBD/ProximityBySpace" value="false" type="str"/>
-                <param name="sync_queue_size" value="20"/>
-                <param name="topic_queue_size" value="20"/>
-                <remap from="rgb/image" to="/kinect/image_throttled"/>
-                <remap from="rgb/camera_info" to="/kinect/camera_info_throttled"/>
-                <remap from="depth/image" to="/kinect/depth/image_throttled"/>
-                <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
+                <remap from="rgb/image" to="/kinect/image_raw"/>
+                <remap from="rgb/camera_info" to="/kinect/camera_info"/>
+                <remap from="depth/image" to="/kinect/depth/image_raw"/>
+                <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
                 <remap from="scan" to="/scan"/>
                 <remap from="odom" to="/odom"/>
             </node>
         </group>
+        <!-- RTAB-Map Pure Localization Mode (localization == pure_localization) -->
         <group if="$(eval '\'$(var localization)\' == \'pure_localization\'')">
             <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen">
                 <param name="database_path" value="$(var db_path)"/>
@@ -116,21 +103,15 @@
                 <param name="use_sim_time" value="false"/>
                 <param name="Mem/IncrementalMemory" value="false" type="str"/>
                 <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
-                <param name="Reg/Force3DoF" value="true" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
                 <param name="Vis/MinInliers" value="20" type="str"/>
                 <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
                 <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
-                <param name="Kp/MaxFeatures" value="-1" type="str"/>
-                <param name="Rtabmap/LoopThr" value="0.11" type="str"/>
-                <param name="RGBD/ProximityBySpace" value="false" type="str"/>
-                <param name="sync_queue_size" value="20"/>
-                <param name="topic_queue_size" value="20"/>
-                <remap from="rgb/image" to="/kinect/image_throttled"/>
-                <remap from="rgb/camera_info" to="/kinect/camera_info_throttled"/>
-                <remap from="depth/image" to="/kinect/depth/image_throttled"/>
-                <remap from="depth/camera_info" to="/kinect/camera_info_throttled"/>
+                <remap from="rgb/image" to="/kinect/image_raw"/>
+                <remap from="rgb/camera_info" to="/kinect/camera_info"/>
+                <remap from="depth/image" to="/kinect/depth/image_raw"/>
+                <remap from="depth/camera_info" to="/kinect/depth/camera_info"/>
                 <remap from="scan" to="/scan"/>
                 <remap from="odom" to="/odom"/>
             </node>
