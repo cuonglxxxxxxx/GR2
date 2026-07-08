@@ -1,6 +1,5 @@
 <launch>
     <arg name="mode" default="desktop" />
-    <arg name="rviz" default="true" />
     <arg name="map_name" default="my_map" />
     <arg name="localization" default="false" />
     <arg name="nav" default="false" />
@@ -10,27 +9,36 @@
     <let name="db_path" value="/home/cuong/.ros/rtabmap_$(var map_name).db" />
     <let name="nav2_params_path" value="$(find-pkg-share my_robot_bringup)/config/nav2_params.yaml" />
     <let name="explore_params_path" value="$(find-pkg-share my_robot_bringup)/config/explore_params.yaml" />
+
+    <!-- Mode desktop,Launch RViz2 only -->
     <group if="$(eval '\'$(var mode)\' == \'desktop\'')">
         <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen"
-              args="-d $(var rviz_config_path)" if="$(var rviz)"/>
+              args="-d $(var rviz_config_path)"/>
     </group>
+
+    <!--Mode raspberry-->
     <group if="$(eval '\'$(var mode)\' == \'raspberry\'')">
-        <node pkg="robot_state_publisher" exec="robot_state_publisher">
+
+        <!-- Publish robot state to TF -->
+        <node pkg="robot_state_publisher" exec="robot_state_publisher" output="screen">
             <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
             <param name="publish_frequency" value="50.0"/>
             <param name="use_sim_time" value="false"/>
         </node>
+        
+        <!-- Publish odometry to TF -->
         <node pkg="odom_to_tf" exec="odom_to_tf" name="odom_to_tf" output="screen">
             <param name="use_sim_time" value="false"/>
         </node>
-        <node pkg="joint_state_publisher" exec="joint_state_publisher" name="joint_state_publisher">
-            <param name="source_list" value="['/joint_states']"/>
-            <param name="rate" value="50"/>
-            <param name="use_sim_time" value="false"/>
-        </node>
+        
+        <!--Publish kinect data-->
         <node pkg="kinect_ros2" exec="kinect_ros2_node" name="kinect_ros2" namespace="kinect" output="screen"/>
+        
+        <!--Throttle depth image to 10Hz-->
         <node pkg="topic_tools" exec="throttle" name="depth_throttle" output="screen"
               args="messages /kinect/depth/image_raw 10.0 /kinect/depth/image_throttled"/>
+        
+        <!--Convert depth image to laser scan-->
         <node pkg="depthimage_to_laserscan" exec="depthimage_to_laserscan_node" name="depthimage_to_laserscan">
             <remap from="depth" to="/kinect/depth/image_throttled"/>
             <remap from="depth_camera_info" to="/kinect/depth/camera_info"/>
@@ -39,23 +47,22 @@
             <param name="scan_height" value="10"/>
             <param name="output_frame" value="kinect_link"/>
         </node>
+        
+        
         <!-- RTAB-Map Mapping Mode (localization == false) -->
         <group if="$(eval '\'$(var localization)\' == \'false\'')">
-            <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen" args="--delete_db_on_start">
+            <node pkg="rtabmap_slam" exec="rtabmap" name="rtabmap" output="screen" args="--delete_db_on_start"><!-- Xoa database cu khi bat dau -->
                 <param name="database_path" value="$(var db_path)"/>
                 <param name="frame_id" value="base_footprint"/>
                 <param name="odom_frame_id" value="odom"/>
                 <param name="subscribe_depth" value="true"/>
                 <param name="subscribe_scan" value="true"/>
                 <param name="approx_sync" value="true"/>
-                <param name="approx_sync_max_interval" value="0.2"/>
+                <!-- <param name="approx_sync_max_interval" value="0.2"/> -->
                 <param name="use_sim_time" value="false"/>
                 <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
-                <param name="Grid/Sensor" value="0" type="str"/>
-                <param name="Grid/RangeMax" value="3.5" type="str"/>
-                <param name="Vis/MinInliers" value="20" type="str"/>
-                <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
-                <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
+                <param name="Grid/Sensor" value="0" type="str"/><!-- 0: laser,1 depth image,2 both-->
+                <!-- <param name="Grid/RangeMax" value="3.5" type="str"/> -->
                 <remap from="rgb/image" to="/kinect/image_raw"/>
                 <remap from="rgb/camera_info" to="/kinect/camera_info"/>
                 <remap from="depth/image" to="/kinect/depth/image_raw"/>
@@ -75,13 +82,9 @@
                 <param name="approx_sync" value="true"/>
                 <param name="approx_sync_max_interval" value="0.2"/>
                 <param name="use_sim_time" value="false"/>
-                <param name="Mem/IncrementalMemory" value="true" type="str"/>
                 <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
-                <param name="Vis/MinInliers" value="20" type="str"/>
-                <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
-                <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <remap from="rgb/image" to="/kinect/image_raw"/>
                 <remap from="rgb/camera_info" to="/kinect/camera_info"/>
                 <remap from="depth/image" to="/kinect/depth/image_raw"/>
@@ -105,9 +108,6 @@
                 <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/>
                 <param name="Grid/RangeMax" value="3.5" type="str"/>
-                <param name="Vis/MinInliers" value="20" type="str"/>
-                <param name="RGBD/AngularUpdate" value="0.1" type="str"/>
-                <param name="RGBD/LinearUpdate" value="0.1" type="str"/>
                 <remap from="rgb/image" to="/kinect/image_raw"/>
                 <remap from="rgb/camera_info" to="/kinect/camera_info"/>
                 <remap from="depth/image" to="/kinect/depth/image_raw"/>
@@ -116,6 +116,8 @@
                 <remap from="odom" to="/odom"/>
             </node>
         </group>
+        
+        <!-- Navigation2 -->
         <group if="$(var nav)">
             <node pkg="nav2_controller" exec="controller_server" name="controller_server" output="screen">
                 <param from="$(var nav2_params_path)"/>
@@ -144,10 +146,14 @@
                 <param name="use_sim_time" value="false"/>
             </node>
         </group>
+        
+        
+        <!-- Exploration -->
         <group if="$(var explore)">
             <node pkg="explore_lite" exec="explore" name="explore_node" output="screen">
                 <param from="$(var explore_params_path)"/>
             </node>
         </group>
+
     </group>
 </launch>
