@@ -63,6 +63,8 @@
                 <param name="Rtabmap/DetectionRate" value="0.5" type="str"/>
                 <param name="Grid/Sensor" value="0" type="str"/><!-- 0: laser,1 depth image,2 both-->
                 <!-- <param name="Grid/RangeMax" value="3.5" type="str"/> -->
+                <param name="Mem/ImagePreDecimation"   value="2"   type="str"/>
+                <param name="Mem/DepthPreDecimation"   value="2"   type="str"/>
                 <remap from="rgb/image" to="/kinect/image_raw"/>
                 <remap from="rgb/camera_info" to="/kinect/camera_info"/>
                 <remap from="depth/image" to="/kinect/depth/image_raw"/>
