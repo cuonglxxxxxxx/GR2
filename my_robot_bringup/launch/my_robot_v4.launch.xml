@@ -139,12 +139,9 @@
                 <remap from="cmd_vel" to="cmd_vel_nav"/>
                 <remap from="cmd_vel_smoothed" to="cmd_vel"/>
             </node>
-            <node pkg="nav2_smoother" exec="smoother_server" name="smoother_server" output="screen">
-                <param from="$(var nav2_params_path)"/>
-            </node>
             <node pkg="nav2_lifecycle_manager" exec="lifecycle_manager" name="lifecycle_manager_navigation" output="screen">
                 <param name="autostart" value="true"/>
-                <param name="node_names" value="[controller_server, smoother_server, planner_server, behavior_server, bt_navigator, velocity_smoother]"/>
+                <param name="node_names" value="[controller_server, planner_server, behavior_server, bt_navigator, velocity_smoother]"/>
                 <param name="use_sim_time" value="false"/>
             </node>
         </group>
