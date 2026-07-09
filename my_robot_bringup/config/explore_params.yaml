@@ -1,14 +1,15 @@
 /**:
   ros__parameters:
-    use_sim_time: false
+    # use_sim_time: false
     robot_base_frame: base_footprint
     costmap_topic: /global_costmap/costmap
     costmap_updates_topic: /global_costmap/costmap_updates
-    return_to_init: true
-    visualize: true
+    # return_to_init: true
+    # visualize: true
     planner_frequency: 0.15
-    progress_timeout: 8.0
-    potential_scale: 3.0
+    progress_timeout: 8.0 #nếu robot không tiến gần frontier trong 8 giây, coi như "kẹt" và bỏ frontier đó
+    # potential_scale: 3.0
+    potential_scale: 0.001
     orientation_scale: 0.0
     gain_scale: 1.0
     transform_tolerance: 1.0
